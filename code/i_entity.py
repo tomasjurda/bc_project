@@ -1,9 +1,9 @@
 from settings import *
 
 class I_Entity(pygame.sprite.Sprite):
-    def __init__(self, pos, groups, collision_sprites):
+    def __init__(self, pos, groups):
         super().__init__(groups)
-        self.collision_sprites = collision_sprites
+        #self.collision_sprites = collision_sprites
         self.ysort = True
         self.dt = 0
 
@@ -64,14 +64,14 @@ class I_Entity(pygame.sprite.Sprite):
             self.frame_index = 0  # Restart animation
             self.status = 'idle'
 
-    def move(self, extra = 1):
+    def move(self, collision_sprites, extra = 1):
         if self.direction.magnitude_squared() > 0:
             # Movement
             self.status = 'walk'
             self.hitbox_rect.x += self.direction.x * self.speed * self.dt * extra
-            self.collision('horizontal')
+            self.collision(collision_sprites, 'horizontal')
             self.hitbox_rect.y += self.direction.y * self.speed * self.dt * extra
-            self.collision('vertical')
+            self.collision(collision_sprites,'vertical')
             self.rect.center = self.hitbox_rect.center
             # Set direction state for animation
             if self.direction.y > 0.2:
@@ -91,18 +91,18 @@ class I_Entity(pygame.sprite.Sprite):
         self.frame_index = 0  # Restart animation
         self.status = 'attack'
     
-    def check_cooldowns(self):
+    def check_cooldowns(self, collison_sprites):
         current_time = pygame.time.get_ticks()
         if self.stunned:
-            self.move(self.dt * 1.5)
+            self.move(collison_sprites , 1.5)
             if current_time - self.stun_time >= self.stun_cooldown:
                 self.stunned = False
         if self.attacking:
             if current_time - self.attack_time >= self.attack_cooldown:
                 self.attacking = False
     
-    def collision(self, direction):
-        for sprite in self.collision_sprites:
+    def collision(self, collison_sprites ,direction):
+        for sprite in collison_sprites:
             if sprite.rect.colliderect(self.hitbox_rect):
                 if direction == 'horizontal':
                     if self.direction.x > 0 : self.hitbox_rect.right = sprite.rect.left 
@@ -125,11 +125,11 @@ class I_Entity(pygame.sprite.Sprite):
         pygame.draw.rect(surface, 'red', (x, y, bar_width, bar_height))
         pygame.draw.rect(surface, 'green', (x, y, bar_width * health_ratio, bar_height))
 
-    def update(self, dt):
+    def update(self, dt, collision_sprites):
         self.dt = dt
         if self.status != 'death':
-            self.check_cooldowns()
+            self.check_cooldowns(collision_sprites)
             if not self.stunned:
                 self.control()
-                self.move()
+                self.move(collision_sprites)
         self.animate()

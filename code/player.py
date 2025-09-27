@@ -2,14 +2,12 @@ from settings import *
 from i_entity import I_Entity
 
 class Player(I_Entity):
-    def __init__(self, pos, groups, collision_sprites, enemy_sprites, interact_sprites ,sprite_sheet):
-        super().__init__(pos, groups, collision_sprites)
+    def __init__(self, pos, groups ,sprite_sheet):
+        super().__init__(pos, groups)
         self.sprite_sheet = sprite_sheet
         self.max_hitpoints = 100
         self.hitpoints = self.max_hitpoints
         self.damage = 20
-        self.enemies = enemy_sprites
-        self.interacts = interact_sprites
         self.score = 0
         self.alive = True
         
@@ -82,17 +80,8 @@ class Player(I_Entity):
             self.attack_hitbox.midbottom = self.hitbox_rect.midtop
         else:
             self.attack_hitbox.midtop = self.hitbox_rect.midbottom
-        self.attack_colision()
-
-    def attack_colision(self):
-        play_sound = choice(self.sound_effects['miss'])
-        for enemy in self.enemies:
-            if self.attack_hitbox.colliderect(enemy.hitbox_rect):
-                enemy.take_damage(self.damage, (pygame.Vector2(enemy.hitbox_rect.center) - pygame.Vector2(self.hitbox_rect.center)).normalize())
-                play_sound = choice(self.sound_effects['hit'])
-        play_sound.set_volume(0.4)
-        play_sound.play()
-        
+        #self.attack_colision()
+   
     def heal(self, heal):
         self.hitpoints += heal
         if self.hitpoints > self.max_hitpoints:
@@ -109,12 +98,7 @@ class Player(I_Entity):
         self.score = 0
         self.attacking = False
         self.animation_speed = 10
-
-    def interact(self):
-        for int in self.interacts:
-            if self.hitbox_rect.colliderect(int.rect):
-                print(int.name)
-                return
+        self.dodging = False
 
     def control(self):
         keys = pygame.key.get_pressed()
@@ -124,8 +108,6 @@ class Player(I_Entity):
             self.attack()
         elif keys[pygame.K_SPACE] and not self.dodging:
             self.dodge()
-        elif keys[pygame.K_e]:
-            self.interact()
 
         # Movement (disabled while attacking)
         if not self.attacking:
@@ -156,10 +138,10 @@ class Player(I_Entity):
             self.frame_index %= len(frames)
             self.image = frames[self.frame_index]
 
-    def check_cooldowns(self):
+    def check_cooldowns(self, collison_sprites):
         current_time = pygame.time.get_ticks()
         if self.stunned:
-            self.move()
+            self.move(collison_sprites)
             if current_time - self.stun_time >= self.stun_cooldown:
                 self.stunned = False
         if self.attacking:
@@ -168,6 +150,6 @@ class Player(I_Entity):
         
         if self.dodging:
             if current_time - self.dodge_time <= 200:
-                self.move(2)
+                self.move(collison_sprites ,extra=2)
             if current_time - self.dodge_time >= self.dodge_cooldown:
                 self.dodging = False
