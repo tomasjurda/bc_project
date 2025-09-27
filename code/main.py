@@ -7,14 +7,6 @@ from sprites import *
 from pytmx.util_pygame import load_pygame
 from groups import *
 
-"""
-python -m venv myenv        
-myenv/Scripts/activate
-pip install pygame-ce
-pip install pytmx
-python code\main.py  
-"""
-
 class Game:
     def __init__(self):
         pygame.init()
@@ -25,6 +17,7 @@ class Game:
         self.map_width = 0
         self.map_height = 0
         self.all_sprites = AllSprites()
+        self.interact_sprites = pygame.sprite.Group()
         self.collision_sprites = pygame.sprite.Group()
         self.enemy_sprites = pygame.sprite.Group()
         self.enemy_spawn_positions = []
@@ -35,10 +28,26 @@ class Game:
         self.death_screen = Menu(self.display_surface, ['Respawn', 'Menu'])
 
     def setup_game(self):
-        map = load_pygame(join('maps','map.tmx'))
+        map = load_pygame(join('maps','tutorial_map.tmx'))
         self.map_width = map.width
         self.map_height = map.height
 
+        for x,y,image in map.get_layer_by_name('Ground').tiles():
+            GroundSprite((x * TILE_SIZE , y * TILE_SIZE), image, self.all_sprites)
+        for obj in map.get_layer_by_name('OnGroundObjects'):
+            OnGroundSprite((obj.x, obj.y), obj.image, self.all_sprites)
+        for x,y,image in map.get_layer_by_name('Walls').tiles():
+            WallSprite((x * TILE_SIZE , y * TILE_SIZE), image, self.all_sprites)
+        for obj in map.get_layer_by_name('Objects'):
+            PropSprite((obj.x, obj.y), obj.image, self.all_sprites)
+        for obj in map.get_layer_by_name('InteractObjects'):
+            InteractObjectSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.interact_sprites), obj.name)
+        for obj in map.get_layer_by_name('Collisions'):
+            CollisionSprite((obj.x, obj.y), pygame.Surface((obj.width, obj.height)), self.collision_sprites)
+        for obj in map.get_layer_by_name('SpawnPoints'):
+            if obj.name == 'Player':
+                self.player_spawn_positions.append((obj.x, obj.y))
+        """
         for x,y,image in map.get_layer_by_name('Ground').tiles():
             GroundSprite((x * TILE_SIZE , y * TILE_SIZE), image, self.all_sprites)
         for x,y,image in map.get_layer_by_name('OnGround').tiles():
@@ -54,26 +63,28 @@ class Game:
                 self.player_spawn_positions.append((obj.x, obj.y))
             else:
                 self.enemy_spawn_positions.append((obj.x, obj.y, obj.name))
+        """
         
-        self.player = Player(choice(self.player_spawn_positions), self.all_sprites, self.collision_sprites, self.enemy_sprites, pygame.image.load(join('graphics', 'models', 'Player.png')).convert_alpha())
-        for point in self.enemy_spawn_positions:
-            if point[2] == 'Slime':
-                Slime((point[0], point[1]), (self.all_sprites, self.enemy_sprites), self.collision_sprites, pygame.image.load(join('graphics', 'models', 'Slime.png')).convert_alpha(), self.player)
-            elif point[2] == 'Skeleton':
-                Skeleton((point[0], point[1]), (self.all_sprites, self.enemy_sprites), self.collision_sprites, pygame.image.load(join('graphics', 'models', 'Skeleton.png')).convert_alpha(), self.player)
+        self.player = Player(self.player_spawn_positions[0], self.all_sprites, self.collision_sprites, self.enemy_sprites, self.interact_sprites ,pygame.image.load(join('graphics', 'models', 'player.png')).convert_alpha())
+        
+        #for point in self.enemy_spawn_positions:
+        #    if point[2] == 'Slime':
+        #        Slime((point[0], point[1]), (self.all_sprites, self.enemy_sprites), self.collision_sprites, pygame.image.load(join('graphics', 'models', 'Slime.png')).convert_alpha(), self.player)
+        #    elif point[2] == 'Skeleton':
+        #        Skeleton((point[0], point[1]), (self.all_sprites, self.enemy_sprites), self.collision_sprites, pygame.image.load(join('graphics', 'models', 'Skeleton.png')).convert_alpha(), self.player)
     
     def reset_game(self):
         # Kill all enemies
         for enemy in self.enemy_sprites.sprites():
             enemy.kill()
         # Respawn player
-        self.player.respawn(choice(self.player_spawn_positions))
+        self.player.respawn(self.player_spawn_positions[0])
         # Spawn new enemies
-        for x, y, name in self.enemy_spawn_positions:
-            if name == 'Slime':
-                Slime((x, y), (self.all_sprites, self.enemy_sprites), self.collision_sprites, pygame.image.load(join('graphics', 'models', 'Slime.png')).convert_alpha(), self.player)
-            elif name == 'Skeleton':
-                Skeleton((x, y), (self.all_sprites, self.enemy_sprites), self.collision_sprites, pygame.image.load(join('graphics', 'models', 'Skeleton.png')).convert_alpha(), self.player)
+        #for x, y, name in self.enemy_spawn_positions:
+        #    if name == 'Slime':
+        #        Slime((x, y), (self.all_sprites, self.enemy_sprites), self.collision_sprites, pygame.image.load(join('graphics', 'models', 'Slime.png')).convert_alpha(), self.player)
+        #    elif name == 'Skeleton':
+        #        Skeleton((x, y), (self.all_sprites, self.enemy_sprites), self.collision_sprites, pygame.image.load(join('graphics', 'models', 'Skeleton.png')).convert_alpha(), self.player)
 
     def show_ui(self):
         font = pygame.font.Font(None, 36)
@@ -110,9 +121,9 @@ class Game:
             elif self.state == 'playing':
                 if not self.player.alive:
                     self.state = 'death'
-                elif not self.enemy_sprites:
-                    print('you won')
-                    self.state = 'menu'
+                #elif not self.enemy_sprites:
+                #    print('you won')
+                #    self.state = 'menu'
                 else:
                     #deltaTime
                     dt = self.clock.tick(60) / 1000
@@ -123,6 +134,18 @@ class Game:
                     self.display_surface.fill('black')
                     self.all_sprites.draw(self.display_surface, self.player.rect.center, self.map_width, self.map_height)
                     self.show_ui()
+                    """
+                    if self.player.status == 'attack' :
+                        offset_x = max(0, min(self.player.rect.centerx - WINDOW_WIDTH / 2, self.map_width * TILE_SIZE - WINDOW_WIDTH))
+                        offset_y = max(0, min(self.player.rect.centery - WINDOW_HEIGHT / 2, self.map_height * TILE_SIZE - WINDOW_HEIGHT))
+                        rect = (
+                            self.player.hitbox_rect.x - offset_x ,
+                            self.player.hitbox_rect.y - offset_y,
+                            self.player.hitbox_rect.width,
+                            self.player.hitbox_rect.height
+                        )
+                        pygame.draw.rect(self.display_surface,(0,0,255) , rect)
+                    """
                     pygame.display.flip()
         # Exit
         pygame.quit()

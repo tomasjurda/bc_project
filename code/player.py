@@ -2,15 +2,17 @@ from settings import *
 from i_entity import I_Entity
 
 class Player(I_Entity):
-    def __init__(self, pos, groups, collision_sprites, enemy_sprites, sprite_sheet):
+    def __init__(self, pos, groups, collision_sprites, enemy_sprites, interact_sprites ,sprite_sheet):
         super().__init__(pos, groups, collision_sprites)
         self.sprite_sheet = sprite_sheet
         self.max_hitpoints = 100
         self.hitpoints = self.max_hitpoints
         self.damage = 20
         self.enemies = enemy_sprites
+        self.interacts = interact_sprites
         self.score = 0
         self.alive = True
+        
 
         # Audio
         self.sound_effects = {
@@ -24,6 +26,7 @@ class Player(I_Entity):
         self.animations = {
             'idle': { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)},
             'walk': { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)},
+            'dodge': { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)},
             'attack': { 'down' : self.load_frames(6, 4 , False), 'right' :  self.load_frames(7, 4, False), 'left' : self.load_frames(7, 4, True),'up' : self.load_frames(8, 4, False)},
             'death' : { 'down' : self.load_frames(9, 4 , True), 'right' :  self.load_frames(9, 4, False), 'left' : self.load_frames(9, 4, True),'up' : self.load_frames(9, 4, False)}
                         }
@@ -31,10 +34,14 @@ class Player(I_Entity):
 
         # Movement
         self.speed = 150
-        
         # Attack
         self.attack_cooldown = 500
         self.attack_hitbox = None
+
+        # Dodge
+        self.dodging = False
+        self.dodge_cooldown = 600
+        self.dodge_time = 0
 
 
     def take_damage(self, damage, knockback):
@@ -54,12 +61,19 @@ class Player(I_Entity):
             self.frame_index = 0 # Restart animation
             self.status = 'idle'
 
+    def dodge(self):
+        self.dodging = True
+        self.dodge_time = pygame.time.get_ticks()
+        self.frame_index = 0
+        self.status = 'dodge'
+        #self.move(10)
+
     def attack(self):
         self.attacking = True
         self.attack_time = pygame.time.get_ticks()
         self.frame_index = 0
         self.status = 'attack'
-        self.attack_hitbox = self.hitbox_rect.copy().inflate(5, 5)
+        self.attack_hitbox = self.hitbox_rect.copy().inflate(-5, -5)
         if self.direction_state == 'right':
             self.attack_hitbox.midleft = self.hitbox_rect.midright
         elif self.direction_state == 'left':
@@ -96,11 +110,22 @@ class Player(I_Entity):
         self.attacking = False
         self.animation_speed = 10
 
+    def interact(self):
+        for int in self.interacts:
+            if self.hitbox_rect.colliderect(int.rect):
+                print(int.name)
+                return
+
     def control(self):
         keys = pygame.key.get_pressed()
+        mouse = pygame.mouse.get_pressed()
         # Attack
-        if keys[pygame.K_SPACE] and not self.attacking:
+        if mouse[pygame.BUTTON_LEFT - 1] and not self.attacking:
             self.attack()
+        elif keys[pygame.K_SPACE] and not self.dodging:
+            self.dodge()
+        elif keys[pygame.K_e]:
+            self.interact()
 
         # Movement (disabled while attacking)
         if not self.attacking:
@@ -110,9 +135,9 @@ class Player(I_Entity):
         else:
             self.direction = pygame.Vector2()
                    
-    def animate(self, dt):
+    def animate(self):
         frames = self.animations[self.status][self.direction_state]
-        self.time_accumulator += dt
+        self.time_accumulator += self.dt
         if self.time_accumulator >= 1 / self.animation_speed:
             self.time_accumulator = 0
             self.frame_index += 1
@@ -131,5 +156,18 @@ class Player(I_Entity):
             self.frame_index %= len(frames)
             self.image = frames[self.frame_index]
 
-
-
+    def check_cooldowns(self):
+        current_time = pygame.time.get_ticks()
+        if self.stunned:
+            self.move()
+            if current_time - self.stun_time >= self.stun_cooldown:
+                self.stunned = False
+        if self.attacking:
+            if current_time - self.attack_time >= self.attack_cooldown:
+                self.attacking = False
+        
+        if self.dodging:
+            if current_time - self.dodge_time <= 200:
+                self.move(2)
+            if current_time - self.dodge_time >= self.dodge_cooldown:
+                self.dodging = False

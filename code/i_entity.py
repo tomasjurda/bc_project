@@ -5,14 +5,15 @@ class I_Entity(pygame.sprite.Sprite):
         super().__init__(groups)
         self.collision_sprites = collision_sprites
         self.ysort = True
+        self.dt = 0
 
         self.max_hitpoints = 10
         self.hitpoints = self.max_hitpoints
         self.damage = 5
 
         # Basic frame setup
-        self.frame_width = 32
-        self.frame_height = 32
+        self.frame_width = 64
+        self.frame_height = 64
         self.animation_speed = 5
 
         # Animation state
@@ -23,7 +24,7 @@ class I_Entity(pygame.sprite.Sprite):
         self.image = pygame.Surface((self.frame_width, self.frame_height))
         self.image.fill('blue')
         self.rect = self.image.get_frect(center=pos)
-        self.hitbox_rect = self.rect.inflate(-18,-20)
+        self.hitbox_rect = self.rect.inflate(-30,-30)
         
         # Movement
         self.direction = pygame.Vector2()
@@ -42,7 +43,8 @@ class I_Entity(pygame.sprite.Sprite):
         """Extract frames from a given row in the sprite sheet."""
         frames = []
         for i in range(cols):
-            frame = pygame.transform.flip(self.sprite_sheet.subsurface((i * self.frame_width, row * self.frame_height, self.frame_width, self.frame_height)), rotate , 0)
+            frame = pygame.transform.flip(self.sprite_sheet.subsurface((i * self.frame_width / 2, row * self.frame_height / 2, self.frame_width / 2, self.frame_height / 2)), rotate , 0)
+            frame = pygame.transform.scale2x(frame)
             frames.append(frame)
         return frames
     
@@ -62,13 +64,13 @@ class I_Entity(pygame.sprite.Sprite):
             self.frame_index = 0  # Restart animation
             self.status = 'idle'
 
-    def move(self, dt):
+    def move(self, extra = 1):
         if self.direction.magnitude_squared() > 0:
             # Movement
             self.status = 'walk'
-            self.hitbox_rect.x += self.direction.x * self.speed * dt
+            self.hitbox_rect.x += self.direction.x * self.speed * self.dt * extra
             self.collision('horizontal')
-            self.hitbox_rect.y += self.direction.y * self.speed * dt
+            self.hitbox_rect.y += self.direction.y * self.speed * self.dt * extra
             self.collision('vertical')
             self.rect.center = self.hitbox_rect.center
             # Set direction state for animation
@@ -89,10 +91,10 @@ class I_Entity(pygame.sprite.Sprite):
         self.frame_index = 0  # Restart animation
         self.status = 'attack'
     
-    def check_cooldowns(self, dt):
+    def check_cooldowns(self):
         current_time = pygame.time.get_ticks()
         if self.stunned:
-            self.move(dt * 1.5)
+            self.move(self.dt * 1.5)
             if current_time - self.stun_time >= self.stun_cooldown:
                 self.stunned = False
         if self.attacking:
@@ -109,7 +111,7 @@ class I_Entity(pygame.sprite.Sprite):
                     if self.direction.y > 0 : self.hitbox_rect.bottom = sprite.rect.top
                     if self.direction.y < 0 : self.hitbox_rect.top = sprite.rect.bottom
     
-    def animate(self, dt):
+    def animate(self):
         pass
 
     def draw_health_bar(self, surface, offset):
@@ -124,9 +126,10 @@ class I_Entity(pygame.sprite.Sprite):
         pygame.draw.rect(surface, 'green', (x, y, bar_width * health_ratio, bar_height))
 
     def update(self, dt):
+        self.dt = dt
         if self.status != 'death':
-            self.check_cooldowns(dt)
+            self.check_cooldowns()
             if not self.stunned:
                 self.control()
-                self.move(dt)
-        self.animate(dt)
+                self.move()
+        self.animate()

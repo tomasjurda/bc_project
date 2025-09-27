@@ -62,9 +62,9 @@ class I_Enemy(I_Entity):
         self.status = 'idle'
 
 
-    def animate(self, dt):
+    def animate(self):
         frames = self.animations[self.status][self.direction_state]
-        self.time_accumulator += dt
+        self.time_accumulator += self.dt
         if self.time_accumulator >= 1 / self.animation_speed:
             self.time_accumulator = 0
             self.frame_index += 1

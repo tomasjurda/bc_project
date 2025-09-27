@@ -5,4 +5,4 @@ from random import choice
 from random import uniform
 
 WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
-TILE_SIZE = 32
+TILE_SIZE = 64
