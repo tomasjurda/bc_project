@@ -10,7 +10,6 @@ class Player(I_Entity):
         self.damage = 20
         self.score = 0
         self.alive = True
-        
 
         # Audio
         self.sound_effects = {
@@ -41,6 +40,8 @@ class Player(I_Entity):
         self.dodge_cooldown = 600
         self.dodge_time = 0
 
+        # Interaction
+        self.interacting = False
 
     def take_damage(self, damage, knockback):
         self.hitpoints -= damage
@@ -108,6 +109,8 @@ class Player(I_Entity):
             self.attack()
         elif keys[pygame.K_SPACE] and not self.dodging:
             self.dodge()
+        elif keys[pygame.K_e] and not self.interacting:
+            self.interacting = True
 
         # Movement (disabled while attacking)
         if not self.attacking:
@@ -146,8 +149,7 @@ class Player(I_Entity):
                 self.stunned = False
         if self.attacking:
             if current_time - self.attack_time >= self.attack_cooldown:
-                self.attacking = False
-        
+                self.attacking = False        
         if self.dodging:
             if current_time - self.dodge_time <= 200:
                 self.move(collison_sprites ,extra=2)

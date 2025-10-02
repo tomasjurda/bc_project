@@ -22,7 +22,23 @@ class Level:
 
         # add player to level
         self.player = player
-        self.all_sprites.add(player)
+        #self.all_sprites.add(player)
+    
+    def check_interactions(self):
+        if self.player.interacting:
+            for inter in self.interact_sprites:
+                if self.player.hitbox_rect.colliderect(inter.rect):
+                    if inter.type == "door" or inter.type == "invisible_door":
+                        split = inter.name.split()
+                        location = split[0]
+                        spawn = list(map(int, [split[1], split[2]]))
+                        return {"target": location,
+                                "spawn": spawn  }
+                    else:
+                        print(inter.type)
+                
+            self.player.interacting = False
+        return None
     
     def load_map(self):
         for x,y,image in self.map.get_layer_by_name('Ground').tiles():
@@ -34,7 +50,7 @@ class Level:
         for obj in self.map.get_layer_by_name('Objects'):
             PropSprite((obj.x, obj.y), obj.image, self.all_sprites)
         for obj in self.map.get_layer_by_name('InteractObjects'):
-            InteractObjectSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.interact_sprites), obj.name)
+            InteractObjectSprite((obj.x, obj.y), obj.image, (self.all_sprites, self.interact_sprites), obj.name , obj.type)
         for obj in self.map.get_layer_by_name('Collisions'):
             CollisionSprite((obj.x, obj.y), pygame.Surface((obj.width, obj.height)), self.collision_sprites)
         for obj in self.map.get_layer_by_name('SpawnPoints'):

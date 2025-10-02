@@ -1,2 +1,0 @@
-class NpcController():
-    pass

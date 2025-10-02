@@ -71,16 +71,13 @@
   <object id="32" gid="647" x="1010" y="955" width="44" height="38"/>
   <object id="33" gid="647" x="921" y="996" width="44" height="38"/>
  </objectgroup>
- <objectgroup id="4" name="InteractObjects">
-  <object id="5" name="statue_tutorial" gid="689" x="603" y="575.667" width="74" height="146"/>
-  <object id="6" name="chest_tutorial" gid="668" x="256" y="576.333" width="64" height="62"/>
-  <object id="51" name="door_tutorial" gid="655" x="599.667" y="256" width="82" height="100"/>
+ <objectgroup color="#ff0000" id="4" name="InteractObjects">
+  <object id="5" name="tutorial" type="statue" gid="689" x="603" y="575.667" width="74" height="146"/>
+  <object id="6" name="sword" type="chest" gid="668" x="256" y="576.333" width="64" height="62"/>
+  <object id="51" name="crossroad 1085 635" type="door" gid="655" x="599.667" y="256" width="82" height="100"/>
  </objectgroup>
  <objectgroup id="6" name="SpawnPoints">
   <object id="34" name="Player" x="640" y="766">
-   <point/>
-  </object>
-  <object id="35" name="Player" x="639" y="318">
    <point/>
   </object>
  </objectgroup>
@@ -97,6 +94,6 @@
   <object id="45" x="1137.33" y="247.334" width="14" height="813.333"/>
   <object id="46" x="993.833" y="908.833" width="18" height="36.3333"/>
   <object id="47" x="606" y="526.667" width="66" height="38.6667"/>
-  <object id="48" x="256" y="514" width="63" height="62"/>
+  <object id="48" x="256" y="534" width="63" height="42"/>
  </objectgroup>
 </map>

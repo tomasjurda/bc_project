@@ -27,12 +27,15 @@ class PropSprite(pygame.sprite.Sprite):
         self.ysort = True
 
 class InteractObjectSprite(pygame.sprite.Sprite):
-    def __init__(self, pos, surf, groups, name):
+    def __init__(self, pos, surf, groups, name, type):
         super().__init__(groups)
         self.image = surf
         self.rect = self.image.get_frect(topleft = pos)
         self.ysort = True
         self.name = name
+        self.type = type
+        if type == "invisible_door":
+            self.invisible = True
 
 class CollisionSprite(pygame.sprite.Sprite):
     def __init__(self, pos, surf, groups):

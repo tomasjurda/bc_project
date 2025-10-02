@@ -16,6 +16,8 @@ class AllSprites(pygame.sprite.Group):
         for sprite in ground_and_col_sprites:
             surface.blit(sprite.image, (int(sprite.rect.topleft[0] - self.offset.x), int(sprite.rect.topleft[1] - self.offset.y)))
         for sprite in sorted(ysort_sprites, key=lambda sprite: sprite.rect.bottomright[1]):
+            if hasattr(sprite, 'invisible'):
+                continue
             surface.blit(sprite.image, (int(sprite.rect.topleft[0] - self.offset.x), int(sprite.rect.topleft[1] - self.offset.y)))
             if hasattr(sprite, 'draw_health_bar'):
                 sprite.draw_health_bar(surface, self.offset)

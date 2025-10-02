@@ -20,8 +20,18 @@ pip install pygame-ce
 pip install pytmx
 python code\main.py  
 
-chatgpt ví
-# TO DO
+
+# RIGHT NOW AND HINTS
+- obj.type pro typ InteractObject pro např dveře a obj.name pro např souřadnice / loot
+- mazání hráče z předchozích map
+- další mapy
+- interact mechanika
+- refactoring player kodu
+- pridavani mechanik souboje
+- pak AI (pathfinding, test zakladních mobek, vytvoření bosse)
+
+
+# ROADMAP
 - 1 cooldown pro všechno, dodge + interact...
 - dalsi mapy
 - zmenit model + animace

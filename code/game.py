@@ -19,18 +19,21 @@ class Game:
 
         # load maps without player
         self.levels = {
-            "tutorial": Level("maps/tutorial_map.tmx", self.player)
+            "tutorial": Level("maps/tutorial_map.tmx", self.player),
+            "crossroad": Level("maps/crossroad_map.tmx", self.player)
         }
-
-        self.switch_level("tutorial", (400, 400))
-        #self.current_level = self.levels["tutorial"]
+        self.current_level = self.levels["tutorial"]
+        self.switch_level("tutorial", self.current_level.player_spawn_positions[0])
+        
         #self.current_level.all_sprites.add(self.player)
 
     def switch_level(self, name, spawn_pos):
+        if self.current_level.all_sprites.has(self.player):
+            self.current_level.all_sprites.remove(self.player)
         self.current_level = self.levels[name]
         self.player.rect.center = spawn_pos
         self.player.hitbox_rect.center = spawn_pos
-        #self.current_level.all_sprites.add(self.player)  # re-add to new sprite group
+        self.current_level.all_sprites.add(self.player)  # re-add to new sprite group
         
     """
     def reset_game(self):
@@ -40,6 +43,10 @@ class Game:
         # Respawn player
         self.player.respawn(self.player_spawn_positions[0])
     """  
+    def display_fps(self, clock):
+        font = pygame.font.Font(None, 25)
+        fps = font.render(f"FPS: {int(clock.get_fps())}", True, 'white')
+        self.display_surface.blit(fps, (20, 20))
 
     def run(self):
         clock = pygame.time.Clock()
@@ -49,6 +56,7 @@ class Game:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     running = False
+            
             # Menu
             """
             if self.state == 'death': 
@@ -56,6 +64,9 @@ class Game:
                 self.reset_game()
             """
             # Playing
+            result = self.current_level.check_interactions()
+            if result:
+                self.switch_level(result["target"], result["spawn"])
             #deltaTime
             dt = clock.tick(60) / 1000
             #update logic
@@ -65,6 +76,7 @@ class Game:
             self.display_surface.fill('black')
             #self.all_sprites.draw(self.display_surface, self.player.rect.center, self.map_width, self.map_height)
             self.current_level.draw(self.display_surface, self.player.rect.center)
+            self.display_fps(clock)
             pygame.display.flip()
 
         # Exit
