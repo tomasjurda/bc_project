@@ -1,14 +1,16 @@
 from settings import *
+from FSM import *
 
 class I_Entity(pygame.sprite.Sprite):
-    def __init__(self, pos, groups):
+    def __init__(self, pos, groups, sprite_sheet):
         super().__init__(groups)
-        #self.collision_sprites = collision_sprites
         self.ysort = True
         self.dt = 0
 
         self.max_hitpoints = 10
         self.hitpoints = self.max_hitpoints
+        self.max_stamina = 10.0
+        self.stamina = self.max_stamina
         self.damage = 5
 
         # Basic frame setup
@@ -17,10 +19,12 @@ class I_Entity(pygame.sprite.Sprite):
         self.animation_speed = 5
 
         # Animation state
-        self.status = 'idle'
+        #self.status = 'idle'
         self.direction_state = 'down'
         self.frame_index = 0
         self.time_accumulator = 0
+        
+        self.sprite_sheet = sprite_sheet
         self.image = pygame.Surface((self.frame_width, self.frame_height))
         self.image.fill('blue')
         self.rect = self.image.get_frect(center=pos)
@@ -31,13 +35,13 @@ class I_Entity(pygame.sprite.Sprite):
         self.speed = 70
 
         # Attack
-        self.attacking = False
-        self.attack_cooldown = 1000
-        self.attack_time = 0
+        #self.attacking = False
+        #self.attack_cooldown = 1000
+        #self.attack_time = 0
         # Stun
-        self.stunned = False
-        self.stun_cooldown = 200
-        self.stun_time = 0
+        #self.stunned = False
+        #self.stun_cooldown = 200
+        #self.stun_time = 0
 
     def load_frames(self, row , cols, rotate):
         """Extract frames from a given row in the sprite sheet."""
@@ -47,62 +51,25 @@ class I_Entity(pygame.sprite.Sprite):
             frame = pygame.transform.scale2x(frame)
             frames.append(frame)
         return frames
-    
-    def control(self):
-        pass
-
-    def take_damage(self, damage, knockback):
-        self.hitpoints -= damage
-        self.direction = knockback
-        if self.hitpoints <= 0:
-            self.status = 'death'
-            self.direction = pygame.Vector2()
-            self.frame_index = 0
-        else:
-            self.stunned = True
-            self.stun_time = pygame.time.get_ticks()
-            self.frame_index = 0  # Restart animation
-            self.status = 'idle'
 
     def move(self, collision_sprites, extra = 1):
-        if self.direction.magnitude_squared() > 0:
-            # Movement
-            self.status = 'walk'
-            self.hitbox_rect.x += self.direction.x * self.speed * self.dt * extra
-            self.collision(collision_sprites, 'horizontal')
-            self.hitbox_rect.y += self.direction.y * self.speed * self.dt * extra
-            self.collision(collision_sprites,'vertical')
-            self.rect.center = self.hitbox_rect.center
-            # Set direction state for animation
-            if self.direction.y > 0.2:
-                self.direction_state = 'down'
-            elif self.direction.y < -0.2:
-                self.direction_state = 'up'
-            if self.direction.x > 0.2:
-                self.direction_state = 'right'
-            elif self.direction.x < -0.2:
-                self.direction_state = 'left'
-        elif not self.attacking:
-            self.status = 'idle'
+        self.hitbox_rect.x += self.direction.x * self.speed * self.dt * extra
+        self.collision(collision_sprites, 'horizontal')
+        self.hitbox_rect.y += self.direction.y * self.speed * self.dt * extra
+        self.collision(collision_sprites,'vertical')
+        self.rect.center = self.hitbox_rect.center
+        # Set direction state for animation
+        if self.direction.y > 0.2:
+            self.direction_state = 'down'
+        elif self.direction.y < -0.2:
+            self.direction_state = 'up'
+        if self.direction.x > 0.2:
+            self.direction_state = 'right'
+        elif self.direction.x < -0.2:
+            self.direction_state = 'left'
         
-    def attack(self):
-        self.attacking = True
-        self.attack_time = pygame.time.get_ticks()
-        self.frame_index = 0  # Restart animation
-        self.status = 'attack'
-    
-    def check_cooldowns(self, collison_sprites):
-        current_time = pygame.time.get_ticks()
-        if self.stunned:
-            self.move(collison_sprites , 1.5)
-            if current_time - self.stun_time >= self.stun_cooldown:
-                self.stunned = False
-        if self.attacking:
-            if current_time - self.attack_time >= self.attack_cooldown:
-                self.attacking = False
-    
-    def collision(self, collison_sprites ,direction):
-        for sprite in collison_sprites:
+    def collision(self, collision_sprites ,direction):
+        for sprite in collision_sprites:
             if sprite.rect.colliderect(self.hitbox_rect):
                 if direction == 'horizontal':
                     if self.direction.x > 0 : self.hitbox_rect.right = sprite.rect.left 
@@ -111,25 +78,25 @@ class I_Entity(pygame.sprite.Sprite):
                     if self.direction.y > 0 : self.hitbox_rect.bottom = sprite.rect.top
                     if self.direction.y < 0 : self.hitbox_rect.top = sprite.rect.bottom
     
+    def draw_bars(self, surface, offset):
+        bar_width = self.rect.width
+        bar_height = 5
+        health_ratio = self.hitpoints / self.max_hitpoints
+        stamina_ratio = self.stamina / self.max_stamina
+
+        x = self.rect.x - offset.x
+        health_y = self.rect.y - offset.y - bar_height * 2
+        stamina_y = self.rect.y - offset.y - bar_height
+
+        pygame.draw.rect(surface, 'black', (x, health_y, bar_width, bar_height * 2))
+        pygame.draw.rect(surface, 'green', (x, health_y, bar_width * health_ratio, bar_height))
+        pygame.draw.rect(surface, 'yellow', (x, stamina_y, bar_width * stamina_ratio, bar_height))
+    
     def animate(self):
         pass
 
-    def draw_health_bar(self, surface, offset):
-        bar_width = self.rect.width
-        bar_height = 4
-        health_ratio = self.hitpoints / self.max_hitpoints
+    def control(self):
+        pass
 
-        x = self.rect.x - offset.x
-        y = self.rect.y - offset.y - bar_height - 2
-
-        pygame.draw.rect(surface, 'red', (x, y, bar_width, bar_height))
-        pygame.draw.rect(surface, 'green', (x, y, bar_width * health_ratio, bar_height))
-
-    def update(self, dt, collision_sprites):
-        self.dt = dt
-        if self.status != 'death':
-            self.check_cooldowns(collision_sprites)
-            if not self.stunned:
-                self.control()
-                self.move(collision_sprites)
-        self.animate()
+    def update(self, dt):
+        pass

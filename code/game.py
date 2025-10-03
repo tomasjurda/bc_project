@@ -34,6 +34,9 @@ class Game:
         self.player.rect.center = spawn_pos
         self.player.hitbox_rect.center = spawn_pos
         self.current_level.all_sprites.add(self.player)  # re-add to new sprite group
+        self.player.current_collisions = self.current_level.collision_sprites
+        #print(len(self.player.current_collisons))
+        #print(len(self.current_level.collision_sprites))
         
     """
     def reset_game(self):

@@ -1,157 +1,70 @@
-from settings import *
 from i_entity import I_Entity
+from FSM import FSM
+from player_states import *
 
 class Player(I_Entity):
     def __init__(self, pos, groups ,sprite_sheet):
-        super().__init__(pos, groups)
-        self.sprite_sheet = sprite_sheet
+        super().__init__(pos, groups, sprite_sheet)
+
+        self.current_collisions = pygame.sprite.Group()
+        #STATS
         self.max_hitpoints = 100
         self.hitpoints = self.max_hitpoints
         self.damage = 20
-        self.score = 0
-        self.alive = True
+        self.speed = 150
 
-        # Audio
+        #CONTROL
+        self.fsm = FSM(self)
+        self.fsm.change_state(Player_Idle())
+        
+        #CDS + ACTIONS
+        self.cooldowns = {"attack" : 0,
+                          "dodge" : 0}
+        self.attack_hitbox = None
+        self.interacting = False
+
+        # AUDIO
         self.sound_effects = {
             'hit' : [pygame.mixer.Sound(join('assets', 'sword_hit_1.wav')), pygame.mixer.Sound(join('assets', 'sword_hit_2.wav')),pygame.mixer.Sound(join('assets', 'sword_hit_3.wav'))],
             'miss' : [pygame.mixer.Sound(join('assets', 'sword_miss_1.wav')),pygame.mixer.Sound(join('assets', 'sword_miss_2.wav')),pygame.mixer.Sound(join('assets', 'sword_miss_3.wav'))],
             'damage' : [pygame.mixer.Sound(join('assets', 'human_damage_1.wav')),pygame.mixer.Sound(join('assets', 'human_damage_2.wav')),pygame.mixer.Sound(join('assets', 'human_damage_3.wav'))]
         }
 
-        # Animation
+        # ANIMATION
         self.animation_speed = 10
         self.animations = {
-            'idle': { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)},
-            'walk': { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)},
-            'dodge': { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)},
-            'attack': { 'down' : self.load_frames(6, 4 , False), 'right' :  self.load_frames(7, 4, False), 'left' : self.load_frames(7, 4, True),'up' : self.load_frames(8, 4, False)},
+            'Player_Idle': { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)},
+            'Player_Run': { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)},
+            'Player_Dodge': { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)},
+            'Player_Attack': { 'down' : self.load_frames(6, 4 , False), 'right' :  self.load_frames(7, 4, False), 'left' : self.load_frames(7, 4, True),'up' : self.load_frames(8, 4, False)},
             'death' : { 'down' : self.load_frames(9, 4 , True), 'right' :  self.load_frames(9, 4, False), 'left' : self.load_frames(9, 4, True),'up' : self.load_frames(9, 4, False)}
-                        }
-        self.image = self.animations[self.status][self.direction_state][self.frame_index]
-
-        # Movement
-        self.speed = 150
-        # Attack
-        self.attack_cooldown = 500
-        self.attack_hitbox = None
-
-        # Dodge
-        self.dodging = False
-        self.dodge_cooldown = 600
-        self.dodge_time = 0
-
-        # Interaction
-        self.interacting = False
-
-    def take_damage(self, damage, knockback):
-        self.hitpoints -= damage
-        self.direction = knockback
-        play_sound = choice(self.sound_effects['damage'])
-        play_sound.set_volume(0.4)
-        play_sound.play()
-        if self.hitpoints <= 0:
-            self.status = 'death'
-            self.direction = pygame.Vector2()
-            self.frame_index = 0 # Restart animation
-            self.animation_speed = 5
-        else:
-            self.stunned = True
-            self.stun_time = pygame.time.get_ticks()
-            self.frame_index = 0 # Restart animation
-            self.status = 'idle'
-
-    def dodge(self):
-        self.dodging = True
-        self.dodge_time = pygame.time.get_ticks()
+        }
+        self.image = self.animations[self.fsm.current_state.__class__.__name__][self.direction_state][self.frame_index]
+             
+    def set_animation(self):
+        self.time_accumulator = 0
         self.frame_index = 0
-        self.status = 'dodge'
-        #self.move(10)
-
-    def attack(self):
-        self.attacking = True
-        self.attack_time = pygame.time.get_ticks()
-        self.frame_index = 0
-        self.status = 'attack'
-        self.attack_hitbox = self.hitbox_rect.copy().inflate(-5, -5)
-        if self.direction_state == 'right':
-            self.attack_hitbox.midleft = self.hitbox_rect.midright
-        elif self.direction_state == 'left':
-            self.attack_hitbox.midright = self.hitbox_rect.midleft
-        elif self.direction_state == 'up':
-            self.attack_hitbox.midbottom = self.hitbox_rect.midtop
-        else:
-            self.attack_hitbox.midtop = self.hitbox_rect.midbottom
-        #self.attack_colision()
-   
-    def heal(self, heal):
-        self.hitpoints += heal
-        if self.hitpoints > self.max_hitpoints:
-            self.hitpoints = self.max_hitpoints
-
-    def respawn(self, pos):
-        self.rect.center = pos
-        self.hitbox_rect.center = pos
-        self.hitpoints = 100
-        self.alive = True
-        self.direction = pygame.Vector2()
-        self.status = 'idle'
-        self.direction_state = 'down'
-        self.score = 0
-        self.attacking = False
-        self.animation_speed = 10
-        self.dodging = False
-
-    def control(self):
-        keys = pygame.key.get_pressed()
-        mouse = pygame.mouse.get_pressed()
-        # Attack
-        if mouse[pygame.BUTTON_LEFT - 1] and not self.attacking:
-            self.attack()
-        elif keys[pygame.K_SPACE] and not self.dodging:
-            self.dodge()
-        elif keys[pygame.K_e] and not self.interacting:
-            self.interacting = True
-
-        # Movement (disabled while attacking)
-        if not self.attacking:
-            self.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
-            self.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
-            self.direction = self.direction.normalize() if self.direction else self.direction
-        else:
-            self.direction = pygame.Vector2()
-                   
+         
     def animate(self):
-        frames = self.animations[self.status][self.direction_state]
+        #print(self.fsm.current_state.__class__.__name__)
+        frames = self.animations[self.fsm.current_state.__class__.__name__][self.direction_state]
         self.time_accumulator += self.dt
         if self.time_accumulator >= 1 / self.animation_speed:
             self.time_accumulator = 0
             self.frame_index += 1
-
-            # Gameover
-            if self.status == 'death' and self.frame_index >= len(frames):
-                self.alive = False
-
-            # If attack ends, return to idle
-            if self.status == 'attack' and self.frame_index >= len(frames):
-                #self.attacking = False (attacking for duration of animation)
-                self.attack_hitbox =  None
-                self.status = 'idle'
-                self.frame_index = 0
-
             self.frame_index %= len(frames)
+
             self.image = frames[self.frame_index]
 
-    def check_cooldowns(self, collison_sprites):
-        current_time = pygame.time.get_ticks()
-        if self.stunned:
-            self.move(collison_sprites)
-            if current_time - self.stun_time >= self.stun_cooldown:
-                self.stunned = False
-        if self.attacking:
-            if current_time - self.attack_time >= self.attack_cooldown:
-                self.attacking = False        
-        if self.dodging:
-            if current_time - self.dodge_time <= 200:
-                self.move(collison_sprites ,extra=2)
-            if current_time - self.dodge_time >= self.dodge_cooldown:
-                self.dodging = False
+    def update(self, dt):
+        self.dt = dt
+        self.update_cooldowns(dt)
+        self.fsm.update()
+        self.animate()
+    
+    def update_cooldowns(self, dt):
+        for key in self.cooldowns:
+            if self.cooldowns[key] > 0:
+                self.cooldowns[key] -= dt
+        if self.stamina < 10.0:
+            self.stamina += dt * 2

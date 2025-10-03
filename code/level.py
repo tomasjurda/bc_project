@@ -58,7 +58,7 @@ class Level:
                 self.player_spawn_positions.append((obj.x, obj.y))
         
     def update(self, dt):
-        self.all_sprites.update(dt, self.collision_sprites)
+        self.all_sprites.update(dt)
 
     def draw(self, surface, player_pos):
         self.all_sprites.draw(surface, player_pos, self.map_width, self.map_height)
