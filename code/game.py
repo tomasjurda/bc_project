@@ -15,7 +15,7 @@ class Game:
         
         #self.setup_game()
         self.state = 'playing'
-        self.player = Player((0,0), {} ,pygame.image.load(join('graphics', 'models', 'player.png')).convert_alpha())
+        self.player = Player((0,0), {} ,pygame.image.load(join('graphics', 'models', 'Player.png')).convert_alpha())
 
         # load maps without player
         self.levels = {

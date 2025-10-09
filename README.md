@@ -33,8 +33,8 @@ python code/main.py
 - [x] obj.type pro typ InteractObject pro např dveře a obj.name pro např souřadnice / loot 
 - [x] mazání hráče z předchozích map 
 - [x] další mapy 
-- [ ] refactoring player + entity + npc kodu 
-- [ ] interact mechanika 
+- [x] interact mechanika 
+- [ ] refactoring player + entity + npc kodu + hierarchie stavů
 - [ ] pridavani mechanik souboje 
 - [ ] pak AI (pathfinding, test zakladních mobek, vytvoření bosse)
     

@@ -3,6 +3,9 @@ class State:
         """Called when entering the state"""
         pass
 
+    def handle_input(self, entity): 
+        pass
+
     def execute(self, entity):
         """Called every frame while in this state"""
         pass
@@ -11,5 +14,3 @@ class State:
         """Called when exiting the state"""
         pass
     
-    def handle_input(self, entity, event): 
-        pass

@@ -29,7 +29,6 @@ class I_Entity(pygame.sprite.Sprite):
         self.image.fill('blue')
         self.rect = self.image.get_frect(center=pos)
         self.hitbox_rect = self.rect.inflate(-30,-30)
-        
         # Movement
         self.direction = pygame.Vector2()
         self.speed = 70

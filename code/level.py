@@ -2,6 +2,7 @@ from player import Player
 from sprites import *
 from pytmx.util_pygame import load_pygame
 from groups import *
+from combat_handler import CombatHandler
 
 
 class Level:
@@ -9,6 +10,7 @@ class Level:
         self.map = load_pygame(tmx_file)
         self.map_width = self.map.width
         self.map_height = self.map.height
+        self.combat_handler = CombatHandler()
 
         self.all_sprites = AllSprites()
         self.interact_sprites = pygame.sprite.Group()
@@ -16,7 +18,7 @@ class Level:
         self.enemy_sprites = pygame.sprite.Group()
         self.enemy_spawn_positions = []
         self.player_spawn_positions = []
-
+        
         # load map layers into groups
         self.load_map()
 
@@ -58,6 +60,7 @@ class Level:
                 self.player_spawn_positions.append((obj.x, obj.y))
         
     def update(self, dt):
+        self.combat_handler.update(self.player, self.enemy_sprites)
         self.all_sprites.update(dt)
 
     def draw(self, surface, player_pos):

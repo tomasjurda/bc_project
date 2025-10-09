@@ -8,10 +8,8 @@ class I_Enemy(I_Entity):
         super().__init__(pos, groups, collision_sprites)
         self.player = player
         self.last_player_location = pygame.Vector2()
-        self.score_value = 5
-        self.heal_value = 5
-        self.stuck_counter = 0 #fuj
-        self.prev_position = pygame.Vector2(self.rect.center) #fuj
+        #self.stuck_counter = 0 #fuj
+        #self.prev_position = pygame.Vector2(self.rect.center) #fuj
 
     def control(self):
         player_center = self.player.hitbox_rect.center

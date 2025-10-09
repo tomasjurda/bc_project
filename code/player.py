@@ -15,11 +15,23 @@ class Player(I_Entity):
 
         #CONTROL
         self.fsm = FSM(self)
-        self.fsm.change_state(Player_Idle())
+        self.states = {
+            "idle" : Player_Idle(),
+            "run" : Player_Run(),
+            "dodge": Dodge(),
+            "attack": Attack(),
+            "hurt" : Hurt(),
+            "death" : Player_Death(),
+            "block" : Player_Block()
+        }
+        self.fsm.change_state(self.states["idle"])
         
         #CDS + ACTIONS
-        self.cooldowns = {"attack" : 0,
-                          "dodge" : 0}
+        self.cooldowns={    "attack" : 0,
+                            "dodge" : 0,
+                            "respawn": 0,
+                            "stun" : 0      }
+        
         self.attack_hitbox = None
         self.interacting = False
 
@@ -32,27 +44,31 @@ class Player(I_Entity):
 
         # ANIMATION
         self.animation_speed = 10
+        self.animation_loop_start = 0
         self.animations = {
             'Player_Idle': { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)},
             'Player_Run': { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)},
-            'Player_Dodge': { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)},
-            'Player_Attack': { 'down' : self.load_frames(6, 4 , False), 'right' :  self.load_frames(7, 4, False), 'left' : self.load_frames(7, 4, True),'up' : self.load_frames(8, 4, False)},
-            'death' : { 'down' : self.load_frames(9, 4 , True), 'right' :  self.load_frames(9, 4, False), 'left' : self.load_frames(9, 4, True),'up' : self.load_frames(9, 4, False)}
+            'Dodge': { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)},
+            'Attack': { 'down' : self.load_frames(6, 5 , False), 'right' :  self.load_frames(7, 5, False), 'left' : self.load_frames(7, 5, True),'up' : self.load_frames(8, 5, False)},
+            'Hurt': { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)},
+            'Player_Death' : { 'down' : self.load_frames(9, 6 , True), 'right' :  self.load_frames(9, 6, False), 'left' : self.load_frames(9, 6, True),'up' : self.load_frames(9, 6, False)},
+            'Player_Block' : {'down' : self.load_frames(9, 6 , True), 'right' :  self.load_frames(9, 6, False), 'left' : self.load_frames(9, 6, True),'up' : self.load_frames(9, 6, False)}
         }
         self.image = self.animations[self.fsm.current_state.__class__.__name__][self.direction_state][self.frame_index]
              
-    def set_animation(self):
+    def set_animation(self, loop_start = 0):
         self.time_accumulator = 0
         self.frame_index = 0
+        self.animation_loop_start = loop_start
          
     def animate(self):
-        #print(self.fsm.current_state.__class__.__name__)
         frames = self.animations[self.fsm.current_state.__class__.__name__][self.direction_state]
         self.time_accumulator += self.dt
         if self.time_accumulator >= 1 / self.animation_speed:
             self.time_accumulator = 0
             self.frame_index += 1
-            self.frame_index %= len(frames)
+            if self.frame_index == len(frames):
+                self.frame_index = self.animation_loop_start
 
             self.image = frames[self.frame_index]
 
@@ -68,3 +84,29 @@ class Player(I_Entity):
                 self.cooldowns[key] -= dt
         if self.stamina < 10.0:
             self.stamina += dt * 2
+        
+    def take_hit(self, attack_type , damage):
+        current_state = self.fsm.current_state.__class__.__name__
+        if current_state == 'Player_Dodge':
+            return
+        elif current_state == 'Player_Block' and attack_type == 1: #1 == light
+            return
+        
+        self.hitpoints -= damage
+        if self.hitpoints <= 0:
+            self.fsm.change_state(self.states["death"])
+        else:
+            self.fsm.change_state(self.states["hurt"])
+
+    def attack(self):
+        #create attack hitbox
+        self.attack_hitbox = self.hitbox_rect.copy().inflate(-5, -5)
+        if self.direction_state == 'right':
+            self.attack_hitbox.midleft = self.hitbox_rect.midright
+        elif self.direction_state == 'left':
+            self.attack_hitbox.midright = self.hitbox_rect.midleft
+        elif self.direction_state == 'up':
+            self.attack_hitbox.midbottom = self.hitbox_rect.midtop
+        else:
+            self.attack_hitbox.midtop = self.hitbox_rect.midbottom
+
