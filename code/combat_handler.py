@@ -7,9 +7,12 @@ class CombatHandler:
         if player.attack_hitbox != None:
             for enemy in enemy_sprites:
                 if player.attack_hitbox.colliderect(enemy.hitbox_rect):
-                    enemy.take_hit(1 , player.damage)
+                    knockback_dir = pygame.Vector2(enemy.hitbox_rect.center) - pygame.Vector2(player.hitbox_rect.center)
+                    enemy.take_hit(1 , player.damage, knockback_dir.normalize())
+
         #HURT PLAYER
         for enemy in enemy_sprites:
             if enemy.attack_hitbox != None:
-                if player.attack_hitbox.colliderect(enemy.hitbox_rect):
-                    player.take_hit(1 , enemy.damage)
+                if enemy.attack_hitbox.colliderect(player.hitbox_rect):
+                    knockback_dir = pygame.Vector2(player.hitbox_rect.center) - pygame.Vector2(enemy.hitbox_rect.center)
+                    player.take_hit(1 , enemy.damage, knockback_dir.normalize())

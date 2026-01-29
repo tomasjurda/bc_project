@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="25" height="12" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="74">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="25" height="12" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="76">
  <tileset firstgid="1" source="../graphics/tilesets_64x64/TX Tileset Grass_64.tsx"/>
  <tileset firstgid="65" source="../graphics/tilesets_64x64/TX Tileset Wall_64.tsx"/>
  <tileset firstgid="321" source="../graphics/tilesets_64x64/TX Struct_64.tsx"/>
@@ -62,7 +62,7 @@
   <object id="35" gid="592" x="54" y="471" width="16" height="16"/>
   <object id="36" gid="598" x="516" y="132.667" width="32" height="20"/>
   <object id="42" gid="606" x="0" y="633" width="64" height="154"/>
-  <object id="43" gid="606" x="-1.33333" y="380.333" width="64" height="154"/>
+  <object id="43" gid="606" x="-1.333" y="380.333" width="64" height="154"/>
   <object id="44" gid="606" x="1534" y="632.333" width="64" height="154"/>
   <object id="45" gid="606" x="1536.67" y="381" width="64" height="154"/>
  </objectgroup>
@@ -70,27 +70,28 @@
   <object id="5" name="boss" type="sign" gid="623" x="995" y="339" width="54" height="64"/>
   <object id="7" name="city" type="sign" gid="622" x="1129" y="340" width="54" height="64"/>
   <object id="73" name="tutorial 640 320" type="invisible_door" gid="591" x="1050.33" y="770.667" width="82" height="100"/>
+  <object id="75" name="arena 800 1450" type="door" gid="591" x="85.6667" y="127.333" width="82" height="100"/>
  </objectgroup>
  <objectgroup id="6" name="SpawnPoints">
   <object id="12" name="Player" x="511" y="512">
    <point/>
   </object>
  </objectgroup>
- <objectgroup id="7" name="Collisions" visible="0">
-  <object id="46" x="10.1667" y="579.667" width="51.5" height="52"/>
+ <objectgroup id="7" name="Collisions">
+  <object id="46" x="10.167" y="579.667" width="51.5" height="52"/>
   <object id="47" x="12.5" y="329.333" width="49.5" height="49"/>
   <object id="48" x="351" y="447" width="58" height="52"/>
   <object id="49" x="609" y="446" width="62" height="49"/>
-  <object id="51" x="1.33333" y="739" width="1597" height="31"/>
-  <object id="53" x="1588" y="111" width="12" height="627.666"/>
-  <object id="54" x="1538" y="328" width="49.5" height="55"/>
-  <object id="55" x="1535.33" y="579.333" width="50.5" height="49"/>
-  <object id="56" x="1394" y="24" width="206" height="85.667"/>
-  <object id="58" x="1" y="114" width="10" height="623.667"/>
-  <object id="65" x="2.00033" y="26" width="1292" height="84"/>
-  <object id="66" x="1279.33" y="112.667" width="14.6667" height="78"/>
-  <object id="67" x="1394" y="112" width="14" height="80.6667"/>
+  <object id="51" x="3.99967" y="729.667" width="1586.33" height="33.6667"/>
+  <object id="53" x="1581.33" y="111" width="12" height="627.666"/>
+  <object id="54" x="1538" y="325.333" width="49.5" height="55"/>
+  <object id="55" x="1538" y="582" width="50.5" height="49"/>
+  <object id="56" x="1408.67" y="24" width="184.666" height="85.667"/>
+  <object id="58" x="5.00003" y="108.667" width="10" height="623.667"/>
+  <object id="65" x="10" y="26" width="1272" height="84"/>
+  <object id="66" x="1283.33" y="27.3337" width="14.6667" height="164.667"/>
+  <object id="67" x="1391.33" y="28" width="14" height="163.333"/>
   <object id="68" x="1502" y="158" width="16" height="28"/>
-  <object id="72" x="1278.67" y="0" width="129.333" height="24"/>
+  <object id="72" x="1278.67" y="5.333" width="129.333" height="18.6667"/>
  </objectgroup>
 </map>

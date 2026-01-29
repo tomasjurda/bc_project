@@ -12,20 +12,18 @@ class Game:
         pygame.init()
         self.display_surface = pygame.display.set_mode((WINDOW_WIDTH, WINDOW_HEIGHT))
         pygame.display.set_caption("Game")
-        
-        #self.setup_game()
-        self.state = 'playing'
-        self.player = Player((0,0), {} ,pygame.image.load(join('graphics', 'models', 'Player.png')).convert_alpha())
 
-        # load maps without player
+        
+        self.player = Player((0,0), {} ,pygame.image.load(join('graphics', 'models', 'Player_last.png')).convert_alpha())
+
+        # load maps
         self.levels = {
             "tutorial": Level("maps/tutorial_map.tmx", self.player),
-            "crossroad": Level("maps/crossroad_map.tmx", self.player)
+            "crossroad": Level("maps/crossroad_map.tmx", self.player),
+            "arena": Level("maps/arena_map.tmx", self.player)
         }
         self.current_level = self.levels["tutorial"]
         self.switch_level("tutorial", self.current_level.player_spawn_positions[0])
-        
-        #self.current_level.all_sprites.add(self.player)
 
     def switch_level(self, name, spawn_pos):
         if self.current_level.all_sprites.has(self.player):
@@ -35,17 +33,8 @@ class Game:
         self.player.hitbox_rect.center = spawn_pos
         self.current_level.all_sprites.add(self.player)  # re-add to new sprite group
         self.player.current_collisions = self.current_level.collision_sprites
-        #print(len(self.player.current_collisons))
-        #print(len(self.current_level.collision_sprites))
+        I_Entity.g_map.construct(self.current_level.map)
         
-    """
-    def reset_game(self):
-        # Kill all enemies
-        for enemy in self.enemy_sprites.sprites():
-            enemy.kill()
-        # Respawn player
-        self.player.respawn(self.player_spawn_positions[0])
-    """  
     def display_fps(self, clock):
         font = pygame.font.Font(None, 25)
         fps = font.render(f"FPS: {int(clock.get_fps())}", True, 'white')
@@ -60,12 +49,6 @@ class Game:
                 if event.type == pygame.QUIT:
                     running = False
             
-            # Menu
-            """
-            if self.state == 'death': 
-                self.state = 'playing'
-                self.reset_game()
-            """
             # Playing
             result = self.current_level.check_interactions()
             if result:
@@ -73,13 +56,12 @@ class Game:
             #deltaTime
             dt = clock.tick(60) / 1000
             #update logic
-            #self.all_sprites.update(dt)
             self.current_level.update(dt)
             #draw
             self.display_surface.fill('black')
-            #self.all_sprites.draw(self.display_surface, self.player.rect.center, self.map_width, self.map_height)
             self.current_level.draw(self.display_surface, self.player.rect.center)
             self.display_fps(clock)
+           
             pygame.display.flip()
 
         # Exit

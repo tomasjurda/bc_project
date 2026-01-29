@@ -1,82 +1,97 @@
-from settings import *
+from FSM import FSM
 from i_entity import I_Entity
+from enemy_states import *
 """
 NPCs that are immediatly hostile
 """
 class I_Enemy(I_Entity):
-    def __init__(self, pos, groups, collision_sprites, player):
-        super().__init__(pos, groups, collision_sprites)
+    def __init__(self, pos, groups, sprite_sheet, collisions, player):
+        super().__init__(pos, groups, sprite_sheet)
+
+        # SETTING THIS IN CREATION
+        self.current_collisions = collisions
+
         self.player = player
         self.last_player_location = pygame.Vector2()
-        #self.stuck_counter = 0 #fuj
-        #self.prev_position = pygame.Vector2(self.rect.center) #fuj
+        self.current_target = pygame.Vector2()
+        self.path_to_player = []
 
-    def control(self):
-        player_center = self.player.hitbox_rect.center
-        self_center = self.hitbox_rect.center
-        to_player = pygame.Vector2(player_center) - pygame.Vector2(self_center)
-        distance = to_player.length()
+        self.fsm = FSM(self)
+        self.states = {
+            "idle" : Enemy_Idle(),
+            "run" : Enemy_Run(),
+            "dodge": Dodge(),
+            "l_attack": Light_Attack(),
+            "h_attack" : Heavy_Attack(),
+            "hurt" : Hurt(),
+            "death" : Enemy_Death(),
+            "block" : Enemy_Block()
+        }
+        self.fsm.change_state(self.states["idle"])
+        
+        #CDS + ACTIONS
+        self.cooldowns={    "attack" : 0,
+                            "dodge" : 0,
+                            "respawn": 0,
+                            "stun" : 0,
+                            "reaction" : 0   }
+        
+        self.attack_hitbox = None
 
-        # Attack
-        if self.hitbox_rect.colliderect(self.player.hitbox_rect) and not self.attacking and self.player.status != 'death':
-            self.attack()
-            knockback_dir = to_player.normalize() if distance != 0 else pygame.Vector2()
-            self.player.take_damage(self.damage, knockback_dir)
+        self.max_hitpoints = 100
+        self.hitpoints = self.max_hitpoints
+        self.damage = 20
+        self.speed = 100
+
+        
+        # AUDIO
+        self.sound_effects = {
+            'hit' : [pygame.mixer.Sound(join('assets', 'sword_hit_1.wav')), pygame.mixer.Sound(join('assets', 'sword_hit_2.wav')),pygame.mixer.Sound(join('assets', 'sword_hit_3.wav'))],
+            'miss' : [pygame.mixer.Sound(join('assets', 'sword_miss_1.wav')),pygame.mixer.Sound(join('assets', 'sword_miss_2.wav')),pygame.mixer.Sound(join('assets', 'sword_miss_3.wav'))],
+            'damage' : [pygame.mixer.Sound(join('assets', 'human_damage_1.wav')),pygame.mixer.Sound(join('assets', 'human_damage_2.wav')),pygame.mixer.Sound(join('assets', 'human_damage_3.wav'))]
+        }
+
+        # ANIMATION
+        self.animations = {
+            'Enemy_Idle': { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)},
+            'Enemy_Run': { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)},
+            'Dodge': { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)},
+            'Light_Attack': { 'down' : self.load_frames(6, 5 , False), 'right' :  self.load_frames(7, 5, False), 'left' : self.load_frames(7, 5, True),'up' : self.load_frames(8, 5, False)},
+            'Hurt': { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)},
+            'Enemy_Death' : { 'down' : self.load_frames(9, 6 , True), 'right' :  self.load_frames(9, 6, False), 'left' : self.load_frames(9, 6, True),'up' : self.load_frames(9, 6, False)},
+            'Enemy_Block' : {'down' : self.load_frames(10, 6 , True), 'right' :  self.load_frames(11, 6, False), 'left' : self.load_frames(11, 6, True),'up' : self.load_frames(12, 6, False)}
+        }
+        self.image = self.animations[self.fsm.current_state.__class__.__name__][self.direction_state][self.frame_index]
+
+    
+    def take_hit(self, attack_type , damage, knockback):
+        current_state = self.fsm.current_state.__class__.__name__
+        if current_state == 'Dodge':
             return
+        elif current_state == 'Enemy_Block' and attack_type == 1: #1 == light
+            return
+        
+        self.hitpoints -= damage
+        if self.hitpoints <= 0:
+            self.fsm.change_state(self.states["death"])
+        else:
+            self.direction = knockback
+            self.fsm.change_state(self.states["hurt"])
 
-        # Vision check
-        if distance <= self.vision:
-            blocked = any(ob.rect.clipline(self.rect.center, self.player.rect.center) for ob in self.collision_sprites)
-            if not blocked:
-                self.last_player_location = pygame.Vector2(player_center)
-                if to_player.length() > 0:
-                    self.direction = to_player.normalize()
-                self.status = 'walk'
-                return
+    def get_path(self):
+        self.path_to_player = self.g_map.get_path(self.rect.center , self.last_player_location)
+        self.g_map.show_path(self.path_to_player)
+        #self.g_map.show_map()
+    
+    def update(self, dt):
+        self.dt = dt
+        self.update_cooldowns(dt)
+        self.fsm.update()
+        #print(" enemy_pos: ", (round(self.rect.centerx), round(self.rect.centery)) , " player_pos: ", (round(self.player.rect.centerx), round(self.player.rect.centery)) ," target: ", self.current_target , " path: ", self.path_to_player)
+        #print(" enemy_pos: ", (round(self.rect.centerx), round(self.rect.centery)) , " state: ", self.fsm.current_state.__class__.__name__ ," target: ", self.current_target , " path: ", self.path_to_player)
+        self.animate()
+        
+        
 
-        # Move toward last known position
-        if self.last_player_location != pygame.Vector2():
-            to_last_pos = self.last_player_location - pygame.Vector2(self_center)
-            if to_last_pos.length() > 10:
-                self.direction = to_last_pos.normalize()
-                self.status = 'walk'
+            
 
-                # Check for being stuck , cely fuj
-                if pygame.Vector2(self.rect.center).distance_to(self.prev_position) < 2:
-                    self.stuck_counter += 1
-                else:
-                    self.stuck_counter = 0
-                if self.stuck_counter > 5:
-                    # Apply small random offset
-                    jitter = pygame.Vector2(uniform(-1, 1), uniform(-1, 1))
-                    self.direction += jitter
-                    self.direction = self.direction.normalize()
-                    self.stuck_counter = 0
-                self.prev_position = pygame.Vector2(self.rect.center)
-                return
-
-        # Idle
-        self.direction = pygame.Vector2()
-        self.status = 'idle'
-
-
-    def animate(self):
-        frames = self.animations[self.status][self.direction_state]
-        self.time_accumulator += self.dt
-        if self.time_accumulator >= 1 / self.animation_speed:
-            self.time_accumulator = 0
-            self.frame_index += 1
-
-            if self.status == 'death' and self.frame_index >= len(frames):
-                self.player.score += self.score_value
-                self.player.heal(self.heal_value)
-                self.kill()
-
-            # If attack ends, return to idle
-            if self.status == 'attack' and self.frame_index >= len(frames):
-                #self.attacking = False
-                self.status = 'idle'
-                self.frame_index = 0
-
-            self.frame_index %= len(frames)
-            self.image = frames[self.frame_index]

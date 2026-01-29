@@ -1,13 +1,13 @@
-from player import Player
+from player import Player, I_Entity
+from i_enemy import I_Enemy
 from sprites import *
-from pytmx.util_pygame import load_pygame
 from groups import *
 from combat_handler import CombatHandler
 
 
 class Level:
-    def __init__(self, tmx_file, player):
-        self.map = load_pygame(tmx_file)
+    def __init__(self, tmx_file : str, player : Player):
+        self.map = pytmx.load_pygame(tmx_file)
         self.map_width = self.map.width
         self.map_height = self.map.height
         self.combat_handler = CombatHandler()
@@ -19,17 +19,18 @@ class Level:
         self.enemy_spawn_positions = []
         self.player_spawn_positions = []
         
+        # add player to level
+        self.player = player
+
         # load map layers into groups
         self.load_map()
 
-        # add player to level
-        self.player = player
         #self.all_sprites.add(player)
     
     def check_interactions(self):
         if self.player.interacting:
             for inter in self.interact_sprites:
-                if self.player.hitbox_rect.colliderect(inter.rect):
+                if self.player.rect.colliderect(inter.rect):
                     if inter.type == "door" or inter.type == "invisible_door":
                         split = inter.name.split()
                         location = split[0]
@@ -58,6 +59,8 @@ class Level:
         for obj in self.map.get_layer_by_name('SpawnPoints'):
             if obj.name == 'Player':
                 self.player_spawn_positions.append((obj.x, obj.y))
+            if obj.name == 'Enemy':
+                I_Enemy((obj.x, obj.y), (self.all_sprites, self.enemy_sprites), pygame.image.load(join('graphics', 'models', 'Player.png')).convert_alpha(), self.collision_sprites, self.player)
         
     def update(self, dt):
         self.combat_handler.update(self.player, self.enemy_sprites)

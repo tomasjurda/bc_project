@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="52">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="20" height="20" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="53">
  <tileset firstgid="1" source="../graphics/tilesets_64x64/TX Tileset Grass_64.tsx"/>
  <tileset firstgid="65" source="../graphics/tilesets_64x64/TX Tileset Wall_64.tsx"/>
  <tileset firstgid="321" source="../graphics/tilesets_64x64/TX Struct_64.tsx"/>
@@ -80,19 +80,22 @@
   <object id="34" name="Player" x="640" y="766">
    <point/>
   </object>
+  <object id="52" name="Enemy" x="945.333" y="406.667">
+   <point/>
+  </object>
  </objectgroup>
  <objectgroup id="7" name="Collisions">
-  <object id="36" x="451" y="582.333" width="63" height="44.3333"/>
-  <object id="37" x="769" y="583.667" width="62" height="46"/>
+  <object id="36" x="459" y="589.333" width="46" height="37.3333"/>
+  <object id="37" x="777" y="589.667" width="43" height="40"/>
   <object id="38" x="449" y="902" width="63" height="44.3333"/>
   <object id="39" x="768" y="903" width="63" height="45.6667"/>
-  <object id="40" x="326.333" y="249.333" width="109" height="28"/>
-  <object id="41" x="842" y="249" width="110" height="29"/>
-  <object id="42" x="128" y="216" width="1022" height="30.6667"/>
-  <object id="43" x="127.333" y="246" width="16.6667" height="814"/>
-  <object id="44" x="144" y="1024.67" width="993.333" height="34"/>
-  <object id="45" x="1137.33" y="247.334" width="14" height="813.333"/>
-  <object id="46" x="993.833" y="908.833" width="18" height="36.3333"/>
+  <object id="40" x="328.333" y="263.333" width="107" height="48"/>
+  <object id="41" x="843" y="266" width="109" height="44"/>
+  <object id="42" x="111" y="216" width="1043.67" height="30.6667"/>
+  <object id="43" x="109.333" y="249.333" width="16.6667" height="814"/>
+  <object id="44" x="109" y="1047.34" width="1059.33" height="98"/>
+  <object id="45" x="1155" y="222.667" width="14" height="845.333"/>
+  <object id="46" x="983.833" y="908.833" width="35" height="43.3333"/>
   <object id="47" x="606" y="526.667" width="66" height="38.6667"/>
   <object id="48" x="256" y="534" width="63" height="42"/>
  </objectgroup>

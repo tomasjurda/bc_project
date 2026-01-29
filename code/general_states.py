@@ -10,15 +10,15 @@ class Run(State):
     def enter(self, entity):
         entity.set_animation()
     
-
-    def execute(self, player):
-        player.move(player.current_collisions)
+    def execute(self, entity):
+        entity.move(entity.current_collisions)
     
-class Attack(State):
+class Light_Attack(State):
     def enter(self, entity):
+        self.attack_start = pygame.time.get_ticks()
         entity.stamina -= 2.0
         entity.cooldowns["attack"] = 0.4
-        entity.set_animation()
+        entity.set_animation(animation_speed = 10)
         entity.attack()
 
 
@@ -29,7 +29,32 @@ class Attack(State):
 
     def exit(self, entity):
         entity.attack_hitbox = None
-        #print("attack ready")
+        entity.set_animation()
+        self.attack_end = pygame.time.get_ticks()
+        print(self.attack_end - self.attack_start, " ms")
+
+
+class Heavy_Attack(State):
+    def enter(self, entity):
+        self.attack_start = pygame.time.get_ticks()
+        entity.stamina -= 4.0
+        entity.cooldowns["attack"] = 0.4
+        entity.set_animation(animation_speed = 10)
+        entity.attack()
+
+
+    def execute(self, entity):
+        if entity.cooldowns["attack"] <= 0: 
+            entity.fsm.change_state(entity.states["idle"])
+        
+
+    def exit(self, entity):
+        entity.attack_hitbox = None
+        entity.set_animation()
+        self.attack_end = pygame.time.get_ticks()
+        print(self.attack_end - self.attack_start, " ms")
+
+
 
 class Dodge(State):
     def enter(self, entity):
@@ -48,10 +73,11 @@ class Dodge(State):
 
 class Hurt(State):
     def enter(self, entity):
-        entity.cooldowns["stun"] = 0.2
+        entity.cooldowns["stun"] = 0.3
         entity.set_animation()
 
 
     def execute(self, entity):
+        entity.move(entity.current_collisions)   
         if entity.cooldowns["stun"] <= 0: 
             entity.fsm.change_state(entity.states["idle"])
