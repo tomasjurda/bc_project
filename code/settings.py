@@ -4,8 +4,7 @@ import pytmx as pytmx
 from collections import deque
 from os.path import join
 from os import walk
-from random import choice
-from random import uniform
+import random as rand
 import math as math
 
 #WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720

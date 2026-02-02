@@ -60,7 +60,7 @@ class Level:
             if obj.name == 'Player':
                 self.player_spawn_positions.append((obj.x, obj.y))
             if obj.name == 'Enemy':
-                I_Enemy((obj.x, obj.y), (self.all_sprites, self.enemy_sprites), pygame.image.load(join('graphics', 'models', 'Player.png')).convert_alpha(), self.collision_sprites, self.player)
+                I_Enemy((obj.x, obj.y), (self.all_sprites, self.enemy_sprites), pygame.image.load(join('graphics', 'models', 'Player_heavy.png')).convert_alpha(), self.collision_sprites, self.player)
         
     def update(self, dt):
         self.combat_handler.update(self.player, self.enemy_sprites)

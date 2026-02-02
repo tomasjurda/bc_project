@@ -6,6 +6,7 @@ class Idle(State):
         entity.direction = pygame.Vector2()
         entity.set_animation()
 
+
 class Run(State):
     def enter(self, entity):
         entity.set_animation()
@@ -13,71 +14,104 @@ class Run(State):
     def execute(self, entity):
         entity.move(entity.current_collisions)
     
+
 class Light_Attack(State):
+    def __init__(self, create_hitbox, delete_hitbox):
+        self.create_hitbox = create_hitbox
+        self.delete_hitbox = delete_hitbox
+
+        
     def enter(self, entity):
         self.attack_start = pygame.time.get_ticks()
         entity.stamina -= 2.0
-        entity.cooldowns["attack"] = 0.4
-        entity.set_animation(animation_speed = 10)
-        entity.attack()
+        entity.set_animation(speed=12 , loop=False)
 
 
     def execute(self, entity):
-        if entity.cooldowns["attack"] <= 0: 
+        anim = entity.current_animation
+
+        if anim.on_frame(self.create_hitbox):
+            entity.attack() # Vytvoří hitbox + zvuk
+
+        if anim.on_frame(self.delete_hitbox):
+            entity.attack_hitbox = None # Deaktivace hitboxu
+
+        if entity.current_animation.finished:
             entity.fsm.change_state(entity.states["idle"])
+            self.attack_end = pygame.time.get_ticks()
+            print(self.attack_end - self.attack_start, " ms")
         
 
     def exit(self, entity):
-        entity.attack_hitbox = None
-        entity.set_animation()
-        self.attack_end = pygame.time.get_ticks()
-        print(self.attack_end - self.attack_start, " ms")
+        pass
 
 
 class Heavy_Attack(State):
+    def __init__(self, create_hitbox, delete_hitbox):
+        self.create_hitbox = create_hitbox
+        self.delete_hitbox = delete_hitbox
+
+
     def enter(self, entity):
         self.attack_start = pygame.time.get_ticks()
         entity.stamina -= 4.0
-        entity.cooldowns["attack"] = 0.4
-        entity.set_animation(animation_speed = 10)
-        entity.attack()
+        entity.set_animation(speed=10, loop=False)
 
 
     def execute(self, entity):
-        if entity.cooldowns["attack"] <= 0: 
+        anim = entity.current_animation
+
+        if anim.on_frame(self.create_hitbox):
+            #self.attack_end = pygame.time.get_ticks()
+            entity.attack() # Vytvoří hitbox + zvuk
+
+        if anim.on_frame(self.delete_hitbox):
+            entity.attack_hitbox = None # Deaktivace hitboxu
+
+        if entity.current_animation.finished:
             entity.fsm.change_state(entity.states["idle"])
+            self.attack_end = pygame.time.get_ticks()
+            print(self.attack_end - self.attack_start, " ms")
         
 
     def exit(self, entity):
-        entity.attack_hitbox = None
-        entity.set_animation()
-        self.attack_end = pygame.time.get_ticks()
-        print(self.attack_end - self.attack_start, " ms")
-
+        pass
 
 
 class Dodge(State):
     def enter(self, entity):
         entity.stamina -= 3.0
-        entity.cooldowns["dodge"] = 0.4
-        entity.set_animation()
+        entity.set_animation(speed= 20 , loop=False)
 
 
     def execute(self, entity):
-        if entity.cooldowns["dodge"] <= 0: 
+        if entity.current_animation.finished:
             entity.fsm.change_state(entity.states["run"])
-        elif entity.cooldowns["dodge"] <= 0.2:
-            entity.move(entity.current_collisions, 0.5)    
         else:
-            entity.move(entity.current_collisions, 3)
+            entity.move(entity.current_collisions, 2.5)
+
 
 class Hurt(State):
     def enter(self, entity):
-        entity.cooldowns["stun"] = 0.3
-        entity.set_animation()
+        entity.set_animation(speed = 20 , loop=False)
 
 
     def execute(self, entity):
-        entity.move(entity.current_collisions)   
-        if entity.cooldowns["stun"] <= 0: 
+        if entity.current_animation.finished:
             entity.fsm.change_state(entity.states["idle"])
+        else:
+            entity.move(entity.current_collisions)   
+
+
+class Block(State):
+    def enter(self, entity):
+        entity.set_animation(speed=6 , loop=True, loop_start=2)
+        entity.speed /=  2
+
+
+    def execute(self, entity):
+        entity.move(entity.current_collisions)
+        
+
+    def exit(self, entity):
+        entity.speed *= 2

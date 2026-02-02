@@ -23,7 +23,8 @@ class AllSprites(pygame.sprite.Group):
                 sprite.draw_bars(surface, self.offset)
             if hasattr(sprite, "attack_hitbox"):
                 if sprite.attack_hitbox:
-                    pygame.draw.rect(surface, 'black', sprite.attack_hitbox.move(-self.offset.x, -self.offset.y))
+                    #pygame.draw.rect(surface, 'black', sprite.attack_hitbox.move(-self.offset.x, -self.offset.y))
+                    pass
         
         
         

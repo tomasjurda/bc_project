@@ -2,6 +2,9 @@ from settings import *
 from FSM import *
 from GridMap import GridMap
 from animation import Animation
+from enemy_states import *
+from player_states import *
+
 
 class I_Entity(pygame.sprite.Sprite):
     g_map = GridMap()
@@ -17,14 +20,13 @@ class I_Entity(pygame.sprite.Sprite):
         self.stamina = self.max_stamina
         self.damage = 5
 
+        self.hit_entities = []
+
         # Basic frame setup and animation
+        self.current_animation = None
         self.frame_width = 64
         self.frame_height = 64
-        self.animation_speed = 8
-        self.animation_loop_start = 0
         self.direction_state = 'down'
-        self.frame_index = 0
-        self.time_accumulator = 0
         
         # Hitbox and sprites
         self.sprite_sheet = sprite_sheet
@@ -36,7 +38,6 @@ class I_Entity(pygame.sprite.Sprite):
         self.direction = pygame.Vector2()
         self.speed = 70
 
-
     def load_frames(self, row , cols, rotate):
         """Extract frames from a given row in the sprite sheet."""
         frames = []
@@ -44,6 +45,17 @@ class I_Entity(pygame.sprite.Sprite):
             frame = pygame.transform.flip(self.sprite_sheet.subsurface((i * self.frame_width, row * self.frame_height, self.frame_width, self.frame_height)), rotate , 0)
             frames.append(frame)
         return frames
+
+    def update_direction(self):
+        # Set direction state for animation
+        if self.direction.y > 0.2:
+            self.direction_state = 'down'
+        elif self.direction.y < -0.2:
+            self.direction_state = 'up'
+        if self.direction.x > 0.2:
+            self.direction_state = 'right'
+        elif self.direction.x < -0.2:
+            self.direction_state = 'left'
 
     def move(self, collision_sprites, extra = 1):
         #self.hitbox_rect.x += self.direction.x * self.speed * self.dt * extra
@@ -54,16 +66,6 @@ class I_Entity(pygame.sprite.Sprite):
         self.collision(collision_sprites,'vertical')
         #self.rect.center = self.hitbox_rect.center
         self.hitbox_rect.center = self.rect.center
-
-        # Set direction state for animation
-        if self.direction.y > 0.2:
-            self.direction_state = 'down'
-        elif self.direction.y < -0.2:
-            self.direction_state = 'up'
-        if self.direction.x > 0.2:
-            self.direction_state = 'right'
-        elif self.direction.x < -0.2:
-            self.direction_state = 'left'
         
     def collision(self, collision_sprites ,direction):
         for sprite in collision_sprites:
@@ -101,34 +103,73 @@ class I_Entity(pygame.sprite.Sprite):
         else:
             self.attack_hitbox.midtop = self.hitbox_rect.midbottom
 
+        self.hit_entities = []
         #play sound
-        play_sound = choice(self.sound_effects['miss'])
+        play_sound = rand.choice(self.sound_effects['miss'])
         play_sound.set_volume(0.4)
         play_sound.play()
 
-    def set_animation(self, loop_start = 0, animation_speed = 8):
-        self.time_accumulator = 0
-        self.frame_index = 0
-        self.animation_loop_start = loop_start
-        self.animation_speed = animation_speed
+    def take_hit(self, attack_type , damage, knockback, attack_source = None):
+        current_state = self.fsm.current_state.__class__
+        
+        if issubclass(current_state, Dodge):
+            print("Dodged!")
+            return
+        
+        elif issubclass(current_state, Block) and attack_type == 1:
+            if attack_source:
+                vec_to_source = pygame.Vector2(attack_source.hitbox_rect.center) - pygame.Vector2(self.hitbox_rect.center)
+                vec_direction = None
+                if self.direction_state == 'right': vec_direction = pygame.Vector2(1, 0)
+                elif self.direction_state == 'left': vec_direction = pygame.Vector2(-1, 0)
+                elif self.direction_state == 'down': vec_direction = pygame.Vector2(0, 1)
+                else: vec_direction = pygame.Vector2(0, -1)
+
+                cos_angle = pygame.math.Vector2.dot(vec_direction, vec_to_source.normalize())
+                if cos_angle > 0:
+                    self.stamina -= 1.0
+                    print("Blocked!")
+                    return
+                else:
+                    print("Wrong dir!")
+        
+        self.hitpoints -= damage * attack_type
+
+        if self.hitpoints <= 0:
+            self.fsm.change_state(self.states["death"])
+        else:
+            self.direction = knockback
+            self.fsm.change_state(self.states["hurt"])
+
+    def set_animation(self, speed=8, loop = True, loop_start = 0, sync_with_current = False):
+        frames = self.animations[self.fsm.current_state.__class__.__name__][self.direction_state]
+
+        saved_frame_index = 0
+        saved_time = 0
+
+        if sync_with_current and self.current_animation:
+            saved_frame_index = self.current_animation.frame_index
+            saved_time = self.current_animation.time_accumulator
+
+        self.current_animation = Animation(frames, speed, loop , loop_start)
+        
+        if sync_with_current:
+            safe_index = saved_frame_index if saved_frame_index < len(frames) else 0
+            self.current_animation.frame_index = safe_index
+            self.current_animation.time_accumulator = saved_time
+
+        self.image = self.current_animation.frames[int(self.current_animation.frame_index)]
 
     def animate(self):
-        frames = self.animations[self.fsm.current_state.__class__.__name__][self.direction_state]
-        self.time_accumulator += self.dt
-        if self.time_accumulator >= 1 / self.animation_speed:
-            self.time_accumulator = 0
-            self.frame_index += 1
-            if self.frame_index == len(frames):
-                self.frame_index = self.animation_loop_start
-
-            self.image = frames[self.frame_index]
+        if self.current_animation:
+            self.image = self.current_animation.update(self.dt)
 
     def update_cooldowns(self, dt):
         for key in self.cooldowns:
             if self.cooldowns[key] > 0:
                 self.cooldowns[key] -= dt
         if self.stamina < 10.0:
-            self.stamina += dt * 2
+            self.stamina += dt * 3
 
     def update(self, dt):
         self.dt = dt

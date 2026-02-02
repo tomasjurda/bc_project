@@ -29,11 +29,13 @@ pip install pytmx
 python code/main.py
 ```
 
-## RIGHT NOW AND HINTS 
-- [x] obj.type pro typ InteractObject pro např dveře a obj.name pro např souřadnice / loot 
-- [x] mazání hráče z předchozích map 
-- [x] další mapy 
-- [x] interact mechanika 
+## RIGHT NOW
+- [x] seamless přechod mezi animacemi
+- [x] dodělat heavy attack = timing, animace
+- [x] dodělat combat = detekce zásahů, úhyb, blok
+- [x] směr bloku = kosinus(player.dir, vektor k enemy) > 0
+
+## ROADMAP
 - [ ] refactoring player + entity + npc kodu + hierarchie stavů
 - [ ] pridavani mechanik souboje 
 - [ ] pak AI (pathfinding, test zakladních mobek, vytvoření bosse)

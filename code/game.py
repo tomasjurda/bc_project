@@ -14,7 +14,7 @@ class Game:
         pygame.display.set_caption("Game")
 
         
-        self.player = Player((0,0), {} ,pygame.image.load(join('graphics', 'models', 'Player_last.png')).convert_alpha())
+        self.player = Player((0,0), {} ,pygame.image.load(join('graphics', 'models', 'Player_heavy.png')).convert_alpha())
 
         # load maps
         self.levels = {
