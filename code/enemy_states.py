@@ -1,46 +1,44 @@
 from general_states import *
-from settings import *
-import time as time
+
 
 class Enemy_Idle(Idle):
     def handle_input(self, enemy):
-        player_pos = pygame.Vector2(enemy.player.rect.center)
         if enemy.cooldowns["reaction"] <= 0:
             action = enemy.decide_action()
-            if action == "run":
-                enemy.last_player_location = player_pos
+            if action == "RUN":
                 enemy.get_path()
                 if enemy.path_to_player:
                     enemy.current_target = pygame.Vector2(enemy.path_to_player.pop(0)) 
                 enemy.fsm.change_state(enemy.states["run"])
-            elif action == "l_attack":
+            elif action == "LIGHT_ATTACK" and enemy.stamina >= 2.0:
                 enemy.fsm.change_state(enemy.states["l_attack"])
-            elif action == "h_attack":
+            elif action == "HEAVY_ATTACK" and enemy.stamina >= 4.0:
                 enemy.fsm.change_state(enemy.states["h_attack"])
-            elif action == "dodge":
+            elif action == "DODGE" and enemy.stamina >= 3.0:
+                #print("dodge z idle")
                 enemy.fsm.change_state(enemy.states["dodge"])
-            elif action == "block":
+            elif action == "BLOCK":
                 enemy.fsm.change_state(enemy.states["block"])
 
 
 class Enemy_Run(Run):
     def handle_input(self, enemy):
-        player_pos = pygame.Vector2(enemy.player.rect.center)
         if enemy.cooldowns["reaction"] <= 0:
             action = enemy.decide_action()
-            if action == "run":
-                enemy.last_player_location = player_pos
+            if action == "RUN":
                 enemy.get_path()
                 if enemy.path_to_player:
                     enemy.current_target = pygame.Vector2(enemy.path_to_player.pop(0)) 
-            elif action == "l_attack":
+            elif action == "LIGHT_ATTACK" and enemy.stamina >= 2.0:
                 enemy.fsm.change_state(enemy.states["l_attack"])
-            elif action == "h_attack":
+            elif action == "HEAVY_ATTACK" and enemy.stamina >= 4.0:
                 enemy.fsm.change_state(enemy.states["h_attack"])
-            elif action == "dodge":
+            elif action == "DODGE" and enemy.stamina >= 3.0:
                 enemy.fsm.change_state(enemy.states["dodge"])
-            elif action == "block":
+            elif action == "BLOCK":
                 enemy.fsm.change_state(enemy.states["block"])
+            elif action == "IDLE":
+                enemy.fsm.change_state(enemy.states["idle"])
 
 
     def execute(self, enemy):
@@ -65,8 +63,8 @@ class Enemy_Run(Run):
         else:
             enemy.fsm.change_state(enemy.states["idle"])  
         
-        #print(enemy.path_to_player)
         enemy.move(enemy.current_collisions)
+
 
 class Enemy_Death(State):
     def enter(self, enemy):
@@ -79,30 +77,52 @@ class Enemy_Death(State):
         
     
     def exit(self, enemy):
-        enemy.kill()
-        #enemy_respawn()
+        #enemy.kill()
+        enemy.respawn()
 
 
 class Enemy_Block(Block):
+    def enter(self,enemy):
+        enemy.face_player()
+        super().enter(enemy)
+
+
     def handle_input(self, enemy):
         if enemy.cooldowns["reaction"] <= 0:
             action = enemy.decide_action()
-            if action == "run":
+            if action == "RUN":
+                enemy.get_path()
+                if enemy.path_to_player:
+                    enemy.current_target = pygame.Vector2(enemy.path_to_player.pop(0)) 
                 enemy.fsm.change_state(enemy.states["run"])
-            elif action == "l_attack":
+            elif action == "LIGHT_ATTACK" and enemy.stamina >= 2.0:
                 enemy.fsm.change_state(enemy.states["l_attack"])
-            elif action == "h_attack":
+            elif action == "HEAVY_ATTACK" and enemy.stamina >= 4.0:
                 enemy.fsm.change_state(enemy.states["h_attack"])
-            elif action == "dodge":
+            elif action == "DODGE" and enemy.stamina >= 3.0:
                 enemy.fsm.change_state(enemy.states["dodge"])
-            elif action == "block":
-                pass
+            elif action == "IDLE":
+                enemy.fsm.change_state(enemy.states["idle"])
+            elif action == "BLOCK":
+                enemy.face_player()
+                enemy.set_animation(loop_start=2, sync_with_current=True)
+
+
+class Enemy_Light_Attack(Light_Attack):
+    def enter(self,enemy):
+        enemy.face_player()
+        super().enter(enemy)
 
 
 class Enemy_Heavy_Attack(Heavy_Attack):
+    def enter(self,enemy):
+        enemy.face_player()
+        super().enter(enemy)
+
+
     def handle_input(self, enemy):
-        pass
-
-
-
+        if enemy.cooldowns["reaction"] <= 0 and enemy.attack_hitbox == None:
+            action = enemy.decide_action()
+            if action == "FEINT":
+                enemy.fsm.change_state(enemy.states["idle"])
         

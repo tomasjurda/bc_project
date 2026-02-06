@@ -1,5 +1,3 @@
-
-
 class State:
     def enter(self, entity):
         """Called when entering the state"""

@@ -80,7 +80,7 @@
   <object id="34" name="Player" x="640" y="766">
    <point/>
   </object>
-  <object id="52" name="Enemy" x="945.333" y="406.667">
+  <object id="52" name="Enemy" x="384.333" y="766.667">
    <point/>
   </object>
  </objectgroup>

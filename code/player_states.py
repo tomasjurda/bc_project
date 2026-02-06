@@ -1,5 +1,4 @@
 from general_states import *
-from settings import *
 
 
 class Player_Idle(Idle):
@@ -13,8 +12,12 @@ class Player_Idle(Idle):
         elif mouse[pygame.BUTTON_RIGHT - 1] and player.stamina >= 4.0:
             player.fsm.change_state(player.states["h_attack"])
 
-        elif pressed_keys[pygame.K_c]:
+        elif pressed_keys[pygame.K_r]:
             player.fsm.change_state(player.states["block"])
+
+        elif pressed_keys[pygame.K_SPACE] and player.stamina >= 3.0:
+            #print("dodge z idle")
+            player.fsm.change_state(player.states["dodge"])
 
         elif pressed_keys[pygame.K_e]:
             player.interacting = True
@@ -42,7 +45,7 @@ class Player_Run(Run):
         elif mouse[pygame.BUTTON_RIGHT - 1] and player.stamina >= 4.0:
             player.fsm.change_state(player.states["h_attack"])
 
-        elif pressed_keys[pygame.K_c]:
+        elif pressed_keys[pygame.K_r]:
             player.fsm.change_state(player.states["block"])
 
         elif pressed_keys[pygame.K_SPACE] and player.stamina >= 3.0:
@@ -76,8 +79,7 @@ class Player_Death(State):
         
     
     def exit(self, player):
-        pass
-        #player_respawn()
+        player.respawn()
         
 
 class Player_Block(Block):
@@ -86,7 +88,7 @@ class Player_Block(Block):
         keys = pygame.key.get_pressed()
         released_key = pygame.key.get_just_released()
 
-        if released_key[pygame.K_c]:
+        if released_key[pygame.K_r]:
             player.fsm.change_state(player.states["idle"])
 
         elif keys[pygame.K_a] or keys[pygame.K_s] or keys[pygame.K_d] or keys[pygame.K_w]:    
@@ -96,7 +98,7 @@ class Player_Block(Block):
                 player.direction.normalize_ip()
                 player.update_direction()
                 if player.direction_state != old_direction_state:
-                    player.set_animation(speed=6 , loop_start=2, sync_with_current=True)
+                    player.set_animation(loop_start=2, sync_with_current=True)
             else:
                 pass
         else:

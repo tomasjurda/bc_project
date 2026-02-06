@@ -1,5 +1,4 @@
 from i_entity import *
-from FSM import FSM
 
 class Player(I_Entity):
     def __init__(self, pos, groups ,sprite_sheet):
@@ -9,8 +8,7 @@ class Player(I_Entity):
         self.current_collisions = pygame.sprite.Group()
 
         #STATS
-        self.max_hitpoints = 200
-        self.hitpoints = self.max_hitpoints
+        self.hitpoints = self.max_hitpoints = 200
         self.damage = 20
         self.speed = 150
 
@@ -19,25 +17,17 @@ class Player(I_Entity):
         self.states = {
             "idle" : Player_Idle(),
             "run" : Player_Run(),
-            "dodge": Dodge(),
+            "dodge": Dodge(1 , 4),
             "l_attack": Light_Attack(2 , 3),
             "h_attack" : Player_Heavy_Attack(3 , 4),
             "hurt" : Hurt(),
             "death" : Player_Death(),
-            "block" : Player_Block()
+            "block" : Player_Block(1 , 6)
         }
 
         #CDS + ACTIONS
+        self.cooldowns={ }
         
-        self.cooldowns={    #"attack" : 0,
-                            #"dodge" : 0,
-                            #"respawn": 0,
-                            #"stun" : 0   
-                            }
-        
-        
-        
-        self.attack_hitbox = None
         self.interacting = False
 
         # AUDIO
@@ -59,6 +49,7 @@ class Player(I_Entity):
             'Player_Block' : {'down' : self.load_frames(10, 6 , True), 'right' :  self.load_frames(11, 6, False), 'left' : self.load_frames(11, 6, True),'up' : self.load_frames(12, 6, False)}
         }
         self.fsm.change_state(self.states["idle"])
+
 
 
     def update(self, dt):
