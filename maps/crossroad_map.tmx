@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="25" height="12" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="76">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="25" height="12" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="78">
  <tileset firstgid="1" source="../graphics/tilesets_64x64/TX Tileset Grass_64.tsx"/>
  <tileset firstgid="65" source="../graphics/tilesets_64x64/TX Tileset Wall_64.tsx"/>
  <tileset firstgid="321" source="../graphics/tilesets_64x64/TX Struct_64.tsx"/>
@@ -69,8 +69,10 @@
  <objectgroup color="#ff0000" id="5" name="InteractObjects">
   <object id="5" name="boss" type="sign" gid="623" x="995" y="339" width="54" height="64"/>
   <object id="7" name="city" type="sign" gid="622" x="1129" y="340" width="54" height="64"/>
-  <object id="73" name="tutorial 640 320" type="invisible_door" gid="591" x="1050.33" y="770.667" width="82" height="100"/>
-  <object id="75" name="arena 800 1450" type="door" gid="591" x="85.6667" y="127.333" width="82" height="100"/>
+  <object id="73" name="tutorial-640 320" type="invisible_door" gid="591" x="1050.33" y="770.667" width="82" height="100"/>
+  <object id="75" name="arena-800 1450-TREE" type="door" gid="591" x="341.333" y="128.5" width="82" height="100"/>
+  <object id="76" name="arena-800 1450-RL_MLP" type="door" gid="591" x="598.833" y="128.5" width="82" height="100"/>
+  <object id="77" name="arena-800 1450-BASIC" type="door" gid="591" x="86.3333" y="128.167" width="82" height="100"/>
  </objectgroup>
  <objectgroup id="6" name="SpawnPoints">
   <object id="12" name="Player" x="511" y="512">
@@ -78,20 +80,20 @@
   </object>
  </objectgroup>
  <objectgroup id="7" name="Collisions">
-  <object id="46" x="10.167" y="579.667" width="51.5" height="52"/>
+  <object id="46" x="10.167" y="578.667" width="51.5" height="59"/>
   <object id="47" x="12.5" y="329.333" width="49.5" height="49"/>
-  <object id="48" x="351" y="447" width="58" height="52"/>
-  <object id="49" x="609" y="446" width="62" height="49"/>
-  <object id="51" x="3.99967" y="729.667" width="1586.33" height="33.6667"/>
-  <object id="53" x="1581.33" y="111" width="12" height="627.666"/>
+  <object id="48" x="330" y="449.667" width="107.333" height="60"/>
+  <object id="49" x="579" y="449.333" width="123.333" height="61.6667"/>
+  <object id="51" x="-1.00033" y="717.667" width="1599.33" height="49.6667"/>
+  <object id="53" x="1551" y="127.333" width="46.6667" height="593.666"/>
   <object id="54" x="1538" y="325.333" width="49.5" height="55"/>
-  <object id="55" x="1538" y="582" width="50.5" height="49"/>
-  <object id="56" x="1408.67" y="24" width="184.666" height="85.667"/>
-  <object id="58" x="5.00003" y="108.667" width="10" height="623.667"/>
-  <object id="65" x="10" y="26" width="1272" height="84"/>
-  <object id="66" x="1283.33" y="27.3337" width="14.6667" height="164.667"/>
+  <object id="55" x="1538" y="578.667" width="50.5" height="57"/>
+  <object id="56" x="1408.67" y="24" width="190.666" height="101"/>
+  <object id="58" x="1.00003" y="116.667" width="48" height="615.667"/>
+  <object id="65" x="2" y="26" width="1280" height="95.3333"/>
+  <object id="66" x="1280.66" y="26.0004" width="14.6667" height="164.667"/>
   <object id="67" x="1391.33" y="28" width="14" height="163.333"/>
-  <object id="68" x="1502" y="158" width="16" height="28"/>
+  <object id="68" x="1481.58" y="140.25" width="49" height="50.4167"/>
   <object id="72" x="1278.67" y="5.333" width="129.333" height="18.6667"/>
  </objectgroup>
 </map>

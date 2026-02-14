@@ -1,11 +1,19 @@
 # Bc projekt
 
 ## HOW TO RUN THE PROGRAM
+### WINDOWS
 ```bash
 python -m venv myenv
 myenv/Scripts/activate
 python -m pip install -r requirements.txt
 python code/main.py
+```
+### LINUX
+```bash
+python3 -m venv myenv
+source myenv/bin/activate
+python3 -m pip install -r requirements.txt
+python3 code/main.py
 ```
 
 ## CONTROLS
@@ -34,3 +42,13 @@ data/npc_dataset.csv
 - RL: vytvoření env (gymnasium), trénink
 - jednoduché AI základních nepřátel
 - využití LLM pro interakci s NPC
+
+
+
+## TO DO NOW
+1. [x] NOVÝ STROM
+2. [x] ENEMY selection při vstupu
+3. [x] NOVÝ RL (reward...) 
+4. [x] path v debugu
+5. [x] SMART, BASIC hostile NPC + non hostile NPC  
+6. [ ] FINAL POLISH (A*, detaily)

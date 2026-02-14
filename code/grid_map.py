@@ -15,12 +15,19 @@ class GridMap:
             for i in range(grid_height):
                 for j in range(grid_width):
                     self.grid[int(obj.y / self.scaled_tile_size) + i][int(obj.x / self.scaled_tile_size) + j] = 1
-        #self.show_map()
+        self.show_map()
 
 
-    def show_map(self, filename = "map.txt"):
+    def show_map(self, filename = "map.txt", diff_grid = None):
+        used_grid = None
+        if diff_grid:
+            used_grid = diff_grid
+        else:
+            used_grid = self.grid
+
+
         with open(filename, "w") as f:
-            for rows in self.grid:
+            for rows in used_grid:
                 for item in rows:
                     f.write('%d ' %item)
                 f.write('\n')
@@ -51,14 +58,16 @@ class GridMap:
         grid_start_y = int(start_cords[1] / self.scaled_tile_size)
         grid_goal_x = int(goal_cords[0] / self.scaled_tile_size)
         grid_goal_y = int(goal_cords[1] / self.scaled_tile_size)
+        
         start = (grid_start_x, grid_start_y)
         goal = (grid_goal_x, grid_goal_y)
 
-        #self.grid[grid_start_y][grid_start_x] = 8
-        #self.grid[grid_goal_y][grid_goal_x] = 9
-        #self.show_map("pos.txt")
-        #self.grid[grid_start_y][grid_start_x] = 0
-        #self.grid[grid_goal_y][grid_goal_x] = 0
+        #grid_cpy = self.grid.copy()
+        #grid_cpy[grid_start_y][grid_start_x] = 8
+        #grid_cpy[grid_goal_y][grid_goal_x] = 9
+        #self.show_map(filename="pos.txt", diff_grid=grid_cpy)
+        #grid_cpy[grid_start_y][grid_start_x] = 0
+        #grid_cpy[grid_goal_y][grid_goal_x] = 0
 
         queue = []
         queue.append(start)

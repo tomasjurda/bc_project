@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="25" height="25" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="52">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="25" height="25" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="58">
  <tileset firstgid="1" source="../graphics/tilesets_64x64/TX Tileset Grass_64.tsx"/>
  <tileset firstgid="65" source="../graphics/tilesets_64x64/TX Tileset Wall_64.tsx"/>
  <tileset firstgid="321" source="../graphics/tilesets_64x64/Props.tsx"/>
@@ -27,8 +27,8 @@
 17,28,8,27,2,19,27,10,15,1,21,20,17,14,13,6,8,1,3,21,18,18,21,5,10,
 21,31,28,2,10,5,27,22,21,25,16,31,2,31,31,32,23,25,24,11,31,9,25,7,11,
 22,10,23,30,5,7,15,17,5,26,8,13,15,14,7,27,18,6,21,9,4,10,32,9,20,
-11,29,2,16,21,2,9,20,16,2,9,10,22,23,10,13,16,20,10,4,17,1,14,4,2,
-19,13,28,8,1,11,30,10,17,21,12,27,2,15,7,5,12,17,21,8,22,17,31,27,19,
+11,29,2,16,21,2,9,20,16,2,9,56,33,55,10,13,16,20,10,4,17,1,14,4,2,
+19,13,28,8,1,11,30,10,17,21,12,51,42,60,7,5,12,17,21,8,22,17,31,27,19,
 22,1,16,10,5,14,14,14,5,25,19,7,1,23,19,8,15,17,8,16,20,30,14,9,24
 </data>
  </layer>
@@ -96,23 +96,39 @@
   <object id="35" gid="351" x="512" y="1087" width="64" height="114"/>
  </objectgroup>
  <objectgroup id="5" name="InteractObjects">
-  <object id="36" name="crossroad 120 180" type="invisible_door" gid="335" x="759" y="1596" width="82" height="100"/>
+  <object id="36" name="crossroad-120 180" type="invisible_door" gid="335" x="759" y="1596" width="82" height="100"/>
  </objectgroup>
- <objectgroup id="7" name="SpawnPoints"/>
+ <objectgroup id="7" name="SpawnPoints">
+  <object id="52" name="NPC" type="smart_hostile" x="832.666" y="832.667">
+   <point/>
+  </object>
+  <object id="53" name="NPC" type="basic_hostile" x="381.818" y="1209.09">
+   <point/>
+  </object>
+  <object id="54" name="NPC" type="basic_hostile" x="1215.15" y="1221.21">
+   <point/>
+  </object>
+  <object id="55" name="NPC" type="basic_hostile" x="1209.09" y="451.515">
+   <point/>
+  </object>
+  <object id="56" name="NPC" type="basic_hostile" x="381.818" y="442.424">
+   <point/>
+  </object>
+ </objectgroup>
  <objectgroup id="4" name="Collisions">
-  <object id="38" x="20" y="1572" width="1549" height="28"/>
-  <object id="39" x="1547" y="2" width="22" height="1568"/>
-  <object id="40" x="62" y="2" width="1484" height="78"/>
-  <object id="41" x="34" y="0" width="22" height="1570"/>
-  <object id="42" x="217" y="272" width="18" height="36"/>
-  <object id="43" x="519" y="588" width="51" height="45"/>
-  <object id="44" x="1033" y="594" width="50" height="34"/>
-  <object id="45" x="1300" y="467" width="27" height="38"/>
-  <object id="46" x="1418" y="979" width="46" height="39"/>
-  <object id="47" x="1031" y="1038" width="53" height="44"/>
-  <object id="48" x="517" y="1042" width="54" height="36"/>
-  <object id="49" x="350" y="1038" width="17" height="41"/>
+  <object id="38" x="57" y="1542" width="1481" height="58"/>
+  <object id="39" x="1537.36" y="3.45455" width="59" height="1592"/>
+  <object id="40" x="62" y="2" width="1484" height="121"/>
+  <object id="41" x="1" y="0" width="58" height="1597"/>
+  <object id="42" x="197.333" y="261.333" width="53.3333" height="53.6667"/>
+  <object id="43" x="514" y="578" width="61.25" height="61"/>
+  <object id="44" x="1029" y="578.5" width="59.5" height="57.5"/>
+  <object id="45" x="1284.33" y="453.333" width="56.6667" height="54"/>
+  <object id="46" x="1412" y="966.333" width="56.6667" height="55.3333"/>
+  <object id="47" x="1027" y="1026.75" width="59.75" height="59.75"/>
+  <object id="48" x="513.5" y="1026.25" width="60.5" height="59.75"/>
+  <object id="49" x="326.667" y="1029.67" width="52.3333" height="54.3333"/>
   <object id="50" x="327" y="1351" width="52" height="53"/>
-  <object id="51" x="1428" y="1424" width="23" height="38"/>
+  <object id="51" x="1413.33" y="1413.67" width="53.6667" height="55.3333"/>
  </objectgroup>
 </map>

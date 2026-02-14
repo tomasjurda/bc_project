@@ -1,23 +1,24 @@
 from player import Player
-from i_enemy import I_Enemy
+from hostile_npc import HostileNPC
+from non_hostile_npc import NonHostileNPC
 from sprites import *
 from sprite_group import *
-from combat_handler import CombatHandler, SoundManager
+from combat_handler import CombatHandler
 
 
 class Level:
-    def __init__(self, tmx_file : str, player : Player, sound_manager : SoundManager):
+    def __init__(self, tmx_file : str, player : Player):
         self.map = pytmx.load_pygame(tmx_file)
         self.map_width = self.map.width
         self.map_height = self.map.height
-        #self.sound_manager = sound_manager
-        self.combat_handler = CombatHandler(sound_manager)
+
+        self.combat_handler = CombatHandler()
 
         self.all_sprites = AllSprites()
         self.interact_sprites = pygame.sprite.Group()
         self.collision_sprites = pygame.sprite.Group()
         self.enemy_sprites = pygame.sprite.Group()
-        self.enemy_spawn_positions = []
+        self.npc_spawn_positions = []
         self.player_spawn_positions = []
         
         # add player to level
@@ -31,11 +32,19 @@ class Level:
             for inter in self.interact_sprites:
                 if self.player.rect.colliderect(inter.rect):
                     if inter.type == "door" or inter.type == "invisible_door":
-                        split = inter.name.split()
+                        split = inter.name.split("-")
+                        #print(split)
                         location = split[0]
-                        spawn = list(map(int, [split[1], split[2]]))
+                        pos_split = split[1].split()
+                        spawn = list(map(int, [pos_split[0], pos_split[1]]))
+                        if len(split) < 3:
+                            options = None
+                        else:
+                            options = split[2]
+
                         return {"target": location,
-                                "spawn": spawn  }
+                                "spawn": spawn,
+                                "options" : options  }
                     else:
                         print(inter.type)
                 
@@ -59,9 +68,27 @@ class Level:
         for obj in self.map.get_layer_by_name('SpawnPoints'):
             if obj.name == 'Player':
                 self.player_spawn_positions.append((obj.x, obj.y))
-            if obj.name == 'Enemy':
-                I_Enemy((obj.x, obj.y), (self.all_sprites, self.enemy_sprites), pygame.image.load(join('graphics', 'models', 'Player.png')).convert_alpha(), self.collision_sprites, self.player)
-        
+            if obj.name == 'NPC':
+                self.npc_spawn_positions.append(((obj.x, obj.y), obj.type))
+
+
+    def spawn_entities(self, options):
+        for spawn, type in self.npc_spawn_positions:
+            if type == "smart_hostile":
+                if options == "TREE":
+                    HostileNPC((spawn[0], spawn[1]), (self.all_sprites, self.enemy_sprites), pygame.image.load(join('graphics', 'models', 'Player_BLUE.png')).convert_alpha(), self.collision_sprites, self.player, brain_type="TREE")
+                elif options == "RL_MLP":
+                    HostileNPC((spawn[0], spawn[1]), (self.all_sprites, self.enemy_sprites), pygame.image.load(join('graphics', 'models', 'Player_BLUE.png')).convert_alpha(), self.collision_sprites, self.player, brain_type="RL_MLP" )
+            elif type == "basic_hostile" and options == "BASIC":
+                HostileNPC((spawn[0], spawn[1]), (self.all_sprites, self.enemy_sprites), pygame.image.load(join('graphics', 'models', 'Player_BLUE.png')).convert_alpha(), self.collision_sprites, self.player )
+            elif type == "non_hostile":
+                NonHostileNPC((spawn[0], spawn[1]), (self.all_sprites, self.enemy_sprites), pygame.image.load(join('graphics', 'models', 'Player_BLUE.png')).convert_alpha(), self.collision_sprites, self.player )
+
+
+    def kill_entities(self):
+        for enemy in self.enemy_sprites:
+            enemy.kill()
+
 
     def update(self, dt):
         self.all_sprites.update(dt)

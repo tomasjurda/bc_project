@@ -15,6 +15,7 @@ class I_Entity(pygame.sprite.Sprite):
         self.dt = 0
 
         self.is_blocking = False
+        self.is_parying = False
         self.is_dodging = False
 
         self.hitpoints = self.max_hitpoints = 50
@@ -25,6 +26,7 @@ class I_Entity(pygame.sprite.Sprite):
         self.fsm = None
 
         # Basic frame setup and animation
+        self.current_state_name = "IDLE"
         self.current_animation = None
         self.frame_width = 64
         self.frame_height = 64
@@ -39,7 +41,17 @@ class I_Entity(pygame.sprite.Sprite):
         # Movement
         self.direction = pygame.Vector2()
         self.speed = 70
+        self.cooldowns = {}
 
+
+    def change_state(self, state):
+        if self.stamina >= state["stamina_cost"]:
+            self.stamina -= state["stamina_cost"]
+            new_state = state["state"]
+            clean_state_name = new_state.__class__.__name__.replace("Player_", "").replace("Enemy_", "").replace("Basic_", "").upper()
+            self.current_state_name = clean_state_name
+            self.fsm.change_state(new_state)
+           
 
     def load_frames(self, row , cols, rotate):
         """Extract frames from a given row in the sprite sheet."""
@@ -63,25 +75,25 @@ class I_Entity(pygame.sprite.Sprite):
 
 
     def move(self, collision_sprites, extra = 1):
-        #self.hitbox_rect.x += self.direction.x * self.speed * self.dt * extra
-        self.rect.x += self.direction.x * self.speed * self.dt * extra
+        self.hitbox_rect.x += self.direction.x * self.speed * self.dt * extra
+        #self.rect.x += self.direction.x * self.speed * self.dt * extra
         self.collision(collision_sprites, 'horizontal')
-        #self.hitbox_rect.y += self.direction.y * self.speed * self.dt * extra
-        self.rect.y += self.direction.y * self.speed * self.dt * extra
+        self.hitbox_rect.y += self.direction.y * self.speed * self.dt * extra
+        #self.rect.y += self.direction.y * self.speed * self.dt * extra
         self.collision(collision_sprites,'vertical')
-        #self.rect.center = self.hitbox_rect.center
-        self.hitbox_rect.center = self.rect.center
+        self.rect.center = self.hitbox_rect.center
+        #self.hitbox_rect.center = self.rect.center
         
 
     def collision(self, collision_sprites ,direction):
         for sprite in collision_sprites:
-            if sprite.rect.colliderect(self.rect):
+            if sprite.rect.colliderect(self.hitbox_rect):
                 if direction == 'horizontal':
-                    if self.direction.x > 0 : self.rect.right = sprite.rect.left 
-                    if self.direction.x < 0 : self.rect.left = sprite.rect.right
+                    if self.direction.x > 0 : self.hitbox_rect.right = sprite.rect.left 
+                    if self.direction.x < 0 : self.hitbox_rect.left = sprite.rect.right
                 else:
-                    if self.direction.y > 0 : self.rect.bottom = sprite.rect.top
-                    if self.direction.y < 0 : self.rect.top = sprite.rect.bottom
+                    if self.direction.y > 0 : self.hitbox_rect.bottom = sprite.rect.top
+                    if self.direction.y < 0 : self.hitbox_rect.top = sprite.rect.bottom
     
 
     def draw_ui(self, surface : pygame.surface.Surface, offset, debug_mode):
@@ -101,52 +113,84 @@ class I_Entity(pygame.sprite.Sprite):
         if debug_mode:
             state_y = self.rect.y - offset.y + self.frame_height - 10
             font = pygame.font.Font(None, 20)
-            state_text = self.fsm.current_state.__class__.__name__
-            clean_state_text = state_text.replace("Player_", "").replace("Enemy_", "").upper()
-            state = font.render(f"{clean_state_text}", True, 'white')
+            state = font.render(f"{self.current_state_name}", True, 'white')
             surface.blit(state, (x + 32 - state.width / 2, state_y))
 
             hitbox_surface = pygame.Surface((self.hitbox_rect.width, self.hitbox_rect.height), pygame.SRCALPHA)
             hitbox_col = None
             if self.is_dodging:
                 hitbox_col = (0, 0, 0, 128)
+            elif self.is_parying:
+                hitbox_col = (0, 0, 255, 128)
             elif self.is_blocking:
                 hitbox_col = (255, 0, 0, 128)
             else:
                 hitbox_col = (0, 255, 0, 128)
             hitbox_surface.fill(hitbox_col)
             surface.blit(hitbox_surface, (self.hitbox_rect.x - offset.x, self.hitbox_rect.y - offset.y))
-    
+
+            if hasattr(self, "path_to_player"):
+                if self.current_state_name == "RUN":
+                    if self.path_to_player:
+                        for point in self.path_to_player:
+                            pygame.draw.rect(surface, 'black', (point[0] - offset.x, point[1] - offset.y, 5 , 5))
+                    if self.current_target:
+                        pygame.draw.rect(surface, 'black', (self.current_target[0] - offset.x, self.current_target[1] - offset.y, 5 , 5))
+
+
+            if hasattr(self, "brain"):
+                brain_text = font.render(f"{self.brain_type}", True, 'white')
+                surface.blit(brain_text, (x + 32 - brain_text.width / 2, state_y + state.height))
+
 
     def create_attack_hitbox(self):
+        if self.cooldowns["imunity"] > 0:
+            self.cooldowns["imunity"] = 0
+
         self.attack_hitbox = self.hitbox_rect.copy()
         if self.direction_state == 'right':
             self.attack_hitbox.midleft = self.hitbox_rect.midright
+            self.attack_hitbox.move_ip(-5 , 0)
             
         elif self.direction_state == 'left':
             self.attack_hitbox.midright = self.hitbox_rect.midleft
+            self.attack_hitbox.move_ip(5 , 0)
 
         elif self.direction_state == 'up':
             self.attack_hitbox.midbottom = self.hitbox_rect.midtop
+            self.attack_hitbox.move_ip(0 , 5)
 
         else:
             self.attack_hitbox.midtop = self.hitbox_rect.midbottom
+            self.attack_hitbox.move_ip(0 , -5)
 
         self.hit_entities = []
 
 
-    def take_hit(self, damage, knockback):
-        self.hitpoints -= damage
+    def take_hit(self, damage, attack_type , knockback):
+        self.hitpoints -= damage * attack_type
+        
+        if hasattr(self, "hostile"):
+            if not self.hostile:
+                self.hostile = True
 
         if self.hitpoints <= 0:
-            self.fsm.change_state(self.states["death"])
+            self.change_state(self.states["DEATH"])
         else:
-            self.direction = knockback
-            self.fsm.change_state(self.states["hurt"])
+            self.change_state(self.states["STUN"])
+            if attack_type == 3:
+                self.cooldowns["stun"] = 1.2
+            else:
+                self.cooldowns["stun"] = 0.4
 
+            if attack_type == 2:
+                self.direction = knockback
+            else:
+                self.direction = pygame.Vector2()
+        
 
     def set_animation(self, speed=8, loop = True, loop_start = 0, sync_with_current = False):
-        frames = self.animations[self.fsm.current_state.__class__.__name__][self.direction_state]
+        frames = self.states[self.current_state_name]["animation"][self.direction_state]
 
         saved_frame_index = 0
         saved_time = 0
@@ -168,14 +212,20 @@ class I_Entity(pygame.sprite.Sprite):
     def animate(self):
         if self.current_animation:
             self.image = self.current_animation.update(self.dt)
+            if self.cooldowns["imunity"] > 0:
+                self.image = copy(self.image) #self.image.set_alpha(128)
+                self.image.set_alpha(128)
 
 
     def update_cooldowns(self, dt):
         for key in self.cooldowns:
             if self.cooldowns[key] > 0:
                 self.cooldowns[key] -= dt
+
+
+    def regen_stamina(self, coef = 2):
         if self.stamina < 10.0:
-            self.stamina += dt * 2
+            self.stamina += self.dt * coef * 1.5
 
 
     def update(self, dt):

@@ -57,7 +57,7 @@
 </data>
  </layer>
  <objectgroup id="3" name="Objects">
-  <object id="14" gid="670" x="450.667" y="634.333" width="64" height="154"/>
+  <object id="14" gid="670" x="448.167" y="634.833" width="64" height="154"/>
   <object id="15" gid="670" x="449.333" y="954.333" width="64" height="154"/>
   <object id="16" gid="670" x="769.333" y="955.667" width="64" height="154"/>
   <object id="17" gid="670" x="768" y="637" width="64" height="154"/>
@@ -67,36 +67,31 @@
   <object id="28" gid="673" x="148" y="257" width="42" height="64"/>
   <object id="29" gid="652" x="157" y="1018" width="94" height="84"/>
   <object id="30" gid="648" x="245" y="823" width="54" height="50"/>
-  <object id="31" gid="695" x="892" y="951" width="226" height="278"/>
+  <object id="31" gid="695" x="883" y="952" width="226" height="278"/>
   <object id="32" gid="647" x="1010" y="955" width="44" height="38"/>
   <object id="33" gid="647" x="921" y="996" width="44" height="38"/>
  </objectgroup>
  <objectgroup color="#ff0000" id="4" name="InteractObjects">
-  <object id="5" name="tutorial" type="statue" gid="689" x="603" y="575.667" width="74" height="146"/>
   <object id="6" name="sword" type="chest" gid="668" x="256" y="576.333" width="64" height="62"/>
-  <object id="51" name="crossroad 1085 635" type="door" gid="655" x="599.667" y="256" width="82" height="100"/>
+  <object id="51" name="crossroad-1085 635" type="door" gid="655" x="599.667" y="256" width="82" height="100"/>
  </objectgroup>
  <objectgroup id="6" name="SpawnPoints">
   <object id="34" name="Player" x="640" y="766">
    <point/>
   </object>
-  <object id="52" name="Enemy" x="384.333" y="766.667">
-   <point/>
-  </object>
  </objectgroup>
  <objectgroup id="7" name="Collisions">
-  <object id="36" x="459" y="589.333" width="46" height="37.3333"/>
-  <object id="37" x="777" y="589.667" width="43" height="40"/>
-  <object id="38" x="449" y="902" width="63" height="44.3333"/>
-  <object id="39" x="768" y="903" width="63" height="45.6667"/>
-  <object id="40" x="328.333" y="263.333" width="107" height="48"/>
-  <object id="41" x="843" y="266" width="109" height="44"/>
-  <object id="42" x="111" y="216" width="1043.67" height="30.6667"/>
-  <object id="43" x="109.333" y="249.333" width="16.6667" height="814"/>
-  <object id="44" x="109" y="1047.34" width="1059.33" height="98"/>
-  <object id="45" x="1155" y="222.667" width="14" height="845.333"/>
-  <object id="46" x="983.833" y="908.833" width="35" height="43.3333"/>
-  <object id="47" x="606" y="526.667" width="66" height="38.6667"/>
-  <object id="48" x="256" y="534" width="63" height="42"/>
+  <object id="36" x="450.083" y="581.333" width="59.8333" height="53.3333"/>
+  <object id="37" x="770.333" y="584.334" width="59" height="50"/>
+  <object id="38" x="449" y="899.667" width="63" height="55.6666"/>
+  <object id="39" x="769.75" y="903" width="61.25" height="51.9167"/>
+  <object id="40" x="324.5" y="256.666" width="116" height="57.75"/>
+  <object id="41" x="836.75" y="257.25" width="120.75" height="53.5"/>
+  <object id="42" x="110" y="216" width="1061.67" height="39.6667"/>
+  <object id="43" x="110.333" y="256.333" width="47.6667" height="895"/>
+  <object id="44" x="141" y="1027.01" width="989.33" height="118.333"/>
+  <object id="45" x="1119" y="226.667" width="52" height="921.333"/>
+  <object id="46" x="966.833" y="899.166" width="52" height="53"/>
+  <object id="48" x="256.333" y="516" width="63" height="60"/>
  </objectgroup>
 </map>

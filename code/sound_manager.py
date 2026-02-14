@@ -1,18 +1,14 @@
 from settings import *
 
 class SoundManager():
-    def __init__(self):
-        if not pygame.mixer.get_init():
-            pygame.mixer.init()
+    last_played_time = 0
+    volume = 0.4
 
-        self.last_played_time = 0
-        self.volume = 0.4
-
-    def play_sound(self, sound : pygame.mixer.Sound):
+    def play_sound(sound : pygame.mixer.Sound):
         current_time = pygame.time.get_ticks()
-        if current_time - self.last_played_time < 100:
+        if current_time - SoundManager.last_played_time <= 120:
             return
-        sound.set_volume(self.volume)
+        sound.set_volume(SoundManager.volume)
         sound.play()
-        self.last_played_time = current_time
+        SoundManager.last_played_time = current_time
     

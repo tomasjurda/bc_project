@@ -6,6 +6,7 @@ from os import walk
 import random as rand
 import math as math
 import time as time
+from copy import copy, deepcopy
 
 
 #WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720

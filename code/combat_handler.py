@@ -1,46 +1,43 @@
 from settings import *
 from player import Player
-from general_states import Heavy_Attack
 from sound_manager import SoundManager
 
 class CombatHandler:
-    def __init__(self, sound_manager : SoundManager):
-        self.sound_manager = sound_manager
-
-
-    def check_hits(self, player : Player, enemy_sprites : pygame.sprite.Group):
+    def check_hits(self, player, enemy_sprites):
         # PLAYER ATTACK
         if player.attack_hitbox:
             attack_type = 1
-            if issubclass(player.fsm.current_state.__class__, Heavy_Attack):
+            if "HEAVY_ATTACK" in player.current_state_name:
                 attack_type = 2
             for enemy in enemy_sprites:
-                if player.attack_hitbox.colliderect(enemy.hitbox_rect) and enemy not in player.hit_entities:
+                if not player.attack_hitbox:
+                    break
+                if player.attack_hitbox.colliderect(enemy.hitbox_rect) and enemy not in player.hit_entities and enemy.cooldowns["imunity"] <= 0:
                     player.hit_entities.append(enemy)
                     self.resolve_hit(player, enemy, attack_type)
             if not player.hit_entities:
-                self.sound_manager.play_sound(player.sound_effects['miss'][0])
+                SoundManager.play_sound(player.sound_effects['miss'][0])
         
 
         # ENEMY ATTACKS
         for enemy in enemy_sprites:
-            if enemy.attack_hitbox:
+            if enemy.attack_hitbox and "DEATH" not in player.current_state_name:
                 attack_type = 1
-                if issubclass(enemy.fsm.current_state.__class__, Heavy_Attack):
+                if "HEAVY_ATTACK" in enemy.current_state_name:
                     attack_type = 2
-                if enemy.attack_hitbox.colliderect(player.hitbox_rect) and player not in enemy.hit_entities:
+                if enemy.attack_hitbox.colliderect(player.hitbox_rect) and player not in enemy.hit_entities and player.cooldowns["imunity"] <= 0:
                     enemy.hit_entities.append(player)
                     self.resolve_hit(enemy, player, attack_type)
                 if not enemy.hit_entities:
-                    self.sound_manager.play_sound(enemy.sound_effects['miss'][0])
+                    SoundManager.play_sound(enemy.sound_effects['miss'][0])
     
     
     def resolve_hit(self, attacker, defender, attack_type):
         if defender.is_dodging:
-            self.sound_manager.play_sound(rand.choice(attacker.sound_effects['miss']))
+            SoundManager.play_sound(rand.choice(attacker.sound_effects['miss']))
             return
         
-        elif defender.is_blocking and attack_type == 1:
+        elif defender.is_blocking and attack_type == 1 or defender.is_parying:
             vec_to_attacker = pygame.Vector2(attacker.hitbox_rect.center) - pygame.Vector2(defender.hitbox_rect.center)
             vec_direction = None
             if defender.direction_state == 'right': vec_direction = pygame.Vector2(1, 0)
@@ -50,14 +47,20 @@ class CombatHandler:
 
             cos_angle = pygame.math.Vector2.dot(vec_direction, vec_to_attacker.normalize())
             if cos_angle > 0:
-                defender.stamina -= 1.0
-                self.sound_manager.play_sound(rand.choice(attacker.sound_effects['hit']))
-                return
+                if defender.is_parying:
+                    SoundManager.play_sound(defender.sound_effects['parry'][0])
+                    attacker.take_hit( 0 , 3 , pygame.Vector2())
+                    return
+                else:
+                    SoundManager.play_sound(rand.choice(attacker.sound_effects['hit']))
+                    return
             else:
                 pass
         
         knockback_dir = pygame.Vector2(defender.hitbox_rect.center) - pygame.Vector2(attacker.hitbox_rect.center)
-        self.sound_manager.play_sound(rand.choice(attacker.sound_effects['damage']))
-        defender.take_hit(attacker.damage * attack_type, knockback_dir.normalize())
+        if knockback_dir.length_squared() > 0:
+            knockback_dir.normalize_ip()
+        SoundManager.play_sound(rand.choice(attacker.sound_effects['damage']))
+        defender.take_hit(attacker.damage , attack_type , knockback_dir)
         
         
