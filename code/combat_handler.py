@@ -12,7 +12,9 @@ class CombatHandler:
             for enemy in enemy_sprites:
                 if not player.attack_hitbox:
                     break
-                if player.attack_hitbox.colliderect(enemy.hitbox_rect) and enemy not in player.hit_entities and enemy.cooldowns["imunity"] <= 0:
+                if "DEATH" in enemy.current_state_name or enemy.cooldowns["imunity"] > 0:
+                    continue
+                if player.attack_hitbox.colliderect(enemy.hitbox_rect) and enemy not in player.hit_entities:
                     player.hit_entities.append(enemy)
                     self.resolve_hit(player, enemy, attack_type)
             if not player.hit_entities:

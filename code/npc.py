@@ -1,11 +1,11 @@
-from i_entity import *
+from entity import *
 from joblib import load
 from stable_baselines3 import PPO
 import numpy as np
 
 ACTION_MAP = {"IDLE": 0, "RUN": 1, "DODGE": 2, "BLOCK": 3, "LIGHT_ATTACK": 4, "HEAVY_ATTACK": 5, "STUN": 6}
 
-class I_NPC(I_Entity):
+class NPC(Entity):
     mlp_brain = PPO.load(join("data", "rl_models" ,"ppo_rpg_agent.zip"))
     tree_brain = load(join("data", "npc_brain_tree.joblib"))  
 
@@ -22,18 +22,18 @@ class I_NPC(I_Entity):
         self.brain_type = brain_type
 
         if brain_type == "TREE":
-            self.brain = copy(I_NPC.tree_brain)
+            self.brain = copy(NPC.tree_brain)
         elif brain_type == "RL_MLP":
-            self.brain = copy(I_NPC.mlp_brain)
+            self.brain = copy(NPC.mlp_brain)
         else:
             self.brain = None
 
         self.fsm = FSM(self)
         # STATES AND ANIMATIONS
         self.states = {
-            "IDLE"          : { "state" : Enemy_Idle()  ,   "stamina_cost" : 0.0    ,   "animation" :   { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)}},
-            "RUN"           : { "state" : Enemy_Run()   ,   "stamina_cost" : 0.0    ,   "animation" :   { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)}},
-            "DODGE"         : { "state" : Enemy_Dodge(1,4)    ,   "stamina_cost" : 3.0    ,   "animation" :   { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)}},
+            "IDLE"          : { "state" : Enemy_Idle()                ,   "stamina_cost" : 0.0    ,   "animation" :   { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)}},
+            "RUN"           : { "state" : Enemy_Run()                 ,   "stamina_cost" : 0.0    ,   "animation" :   { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)}},
+            "DODGE"         : { "state" : Enemy_Dodge(1,4)            ,   "stamina_cost" : 3.0    ,   "animation" :   { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)}},
             "LIGHT_ATTACK"  : { "state" : Enemy_Light_Attack(2,3)     ,  "stamina_cost" : 3.0   , "animation" : { 'down' : self.load_frames(6, 5 , False), 'right' :  self.load_frames(7, 5, False), 'left' : self.load_frames(7, 5, True),'up' : self.load_frames(8, 5, False)}},
             "HEAVY_ATTACK"  : { "state" : Enemy_Heavy_Attack(3,4)     ,  "stamina_cost" : 5.0   , "animation" : { 'down' : self.load_frames(13, 6 , False), 'right' :  self.load_frames(14, 6, False), 'left' : self.load_frames(14, 6, True),'up' : self.load_frames(15, 6, False)}}, 
             "STUN"          : { "state" : Enemy_Stun()                ,  "stamina_cost" : 0.0   , "animation" : { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)}},

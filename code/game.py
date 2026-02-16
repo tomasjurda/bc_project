@@ -1,5 +1,5 @@
 from level import *
-from i_entity import I_Entity
+from entity import Entity
 
 class Game:
     def __init__(self):
@@ -12,26 +12,33 @@ class Game:
         self.game_speed = 1
 
         self.player = Player((0,0), {} ,pygame.image.load(join('graphics', 'models', 'Player.png')).convert_alpha())
-        
+        self.player_text = ""
+        self.player_talking = False
 
         # load maps
         self.levels = {
-            "tutorial": Level("maps/tutorial_map.tmx", self.player),
-            "crossroad": Level("maps/crossroad_map.tmx", self.player),
-            "arena": Level("maps/arena_map.tmx", self.player)
+            "tutorial": Level("maps/tutorial_map.tmx"),
+            "crossroad": Level("maps/crossroad_map.tmx"),
+            "arena": Level("maps/arena_map.tmx"),
+            "city": Level("maps/city_map.tmx")
         }
-        self.current_level = self.levels["tutorial"]
-        self.switch_level("tutorial", self.current_level.player_spawn_positions[0])
+        #self.current_level = self.levels["tutorial"]
+        self.current_level = None
+        self.switch_level("tutorial")
 
 
-    def switch_level(self, name, spawn_pos, options = None):
-        self.current_level.kill_entities()
+    def switch_level(self, name, spawn_pos = None, options = None):
+        if self.current_level:
+            self.current_level.kill_entities()
 
-        if self.current_level.all_sprites.has(self.player):
-            self.current_level.all_sprites.remove(self.player)
+            if self.current_level.all_sprites.has(self.player):
+                self.current_level.all_sprites.remove(self.player)
         self.current_level = self.levels[name]
+        self.current_level.player = self.player
 
         # updating player for new level
+        if spawn_pos == None:
+            spawn_pos = self.current_level.player_spawn_positions[0]
         self.player.rect.center = spawn_pos
         self.player.hitbox_rect.center = spawn_pos
         self.current_level.all_sprites.add(self.player) 
@@ -41,7 +48,7 @@ class Game:
             self.player.respawn_point["pos"] = self.current_level.player_spawn_positions[0]
         
         # map construction for path finding 
-        I_Entity.g_map.construct(self.current_level.map)
+        Entity.g_map.construct(self.current_level.map)
         self.current_level.spawn_entities(options)
         
         
@@ -53,6 +60,11 @@ class Game:
 
         debug = font.render(f"debug: {self.debug_mode}", True, 'white')
         self.display_surface.blit(debug, (20, 40))
+
+
+        if self.player_talking:
+            text = font.render(f": {self.player_text}", True, 'white')
+            self.display_surface.blit(text, (20, 60))
 
 
     def run(self):

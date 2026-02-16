@@ -1,6 +1,6 @@
-from i_entity import *
+from entity import *
 
-class Player(I_Entity):
+class Player(Entity):
     def __init__(self, pos, groups ,sprite_sheet):
         super().__init__(pos, groups, sprite_sheet)
 
@@ -26,13 +26,16 @@ class Player(I_Entity):
             "HEAVY_ATTACK"  : { "state" : Player_Heavy_Attack(3,4)  ,  "stamina_cost"   : 5.0   ,   "animation" :   { 'down' : self.load_frames(13, 6 , False), 'right' :  self.load_frames(14, 6, False), 'left' : self.load_frames(14, 6, True),'up' : self.load_frames(15, 6, False)}}, 
             "STUN"          : { "state" : Player_Stun()             ,  "stamina_cost"   : 0.0   ,   "animation" :   { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)}},
             "DEATH"         : { "state" : Player_Death()            ,  "stamina_cost"   : 0.0   ,   "animation" :   { 'down' : self.load_frames(9, 6 , True), 'right' :  self.load_frames(9, 6, False), 'left' : self.load_frames(9, 6, True),'up' : self.load_frames(9, 6, False)}},
-            "BLOCK"         : { "state" : Player_Block(1,6)         ,  "stamina_cost"   : 0.0   ,   "animation" :   { 'down' : self.load_frames(10, 6 , True), 'right' :  self.load_frames(11, 6, False), 'left' : self.load_frames(11, 6, True),'up' : self.load_frames(12, 6, False)}}
+            "BLOCK"         : { "state" : Player_Block(1,6)         ,  "stamina_cost"   : 0.0   ,   "animation" :   { 'down' : self.load_frames(10, 6 , True), 'right' :  self.load_frames(11, 6, False), 'left' : self.load_frames(11, 6, True),'up' : self.load_frames(12, 6, False)}},
+            "DIALOG"        : { "state" : Player_Dialog()           ,  "stamina_cost"  : 0.0   ,   "animation" :   { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)}}
+
         }
 
         # COOLDOWNS
         self.cooldowns = {
             "stun" : 0,
-            "imunity" : 0
+            "imunity" : 0,
+            "map" : 0
         }
         
         self.interacting = False
@@ -49,10 +52,16 @@ class Player(I_Entity):
         }
 
         self.change_state(self.states["IDLE"])
-
+    
+    def show_on_map(self):
+        self.cooldowns["map"] = 0.2
+        grid_cpy =  deepcopy(Entity.g_map.grid)
+        grid_cpy[int(self.hitbox_rect.centery / TILE_SIZE)][int(self.hitbox_rect.centerx / TILE_SIZE)] = 9
+        Entity.g_map.show_map(filename="pos.txt", diff_grid=grid_cpy)
+        
 
     def respawn(self):
-        self.hitpoints = self.max_hitpoints
+        super().respawn()
         self.is_alive = True
 
 
@@ -61,4 +70,6 @@ class Player(I_Entity):
         self.update_cooldowns(dt)
         self.fsm.update()
         self.animate()
+        #if self.cooldowns["map"] <= 0:
+            #self.show_on_map()
 

@@ -6,7 +6,7 @@ from enemy_states import *
 from player_states import *
 
 
-class I_Entity(pygame.sprite.Sprite):
+class Entity(pygame.sprite.Sprite):
     g_map = GridMap()
     
     def __init__(self, pos, groups, sprite_sheet):
@@ -64,6 +64,7 @@ class I_Entity(pygame.sprite.Sprite):
 
     def respawn(self):
         self.hitpoints = self.max_hitpoints
+        self.cooldowns["imunity"] = 1.0
         
 
     def update_direction(self):

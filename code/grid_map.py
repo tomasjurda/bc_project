@@ -1,5 +1,5 @@
 from settings import *
-from datetime import datetime
+from queue import PriorityQueue
 
 class GridMap:
     def __init__(self):
@@ -52,7 +52,12 @@ class GridMap:
             if len(valid_neigh) == 0:
                 print("err")
             return valid_neigh
-                
+
+
+        def heuristic(a, b):
+            # Manhattan distance on a square grid
+            return abs(a[0] - b[0]) + abs(a[1] - b[1]) 
+        
         # x = col , y = row
         grid_start_x = int(start_cords[0] / self.scaled_tile_size)
         grid_start_y = int(start_cords[1] / self.scaled_tile_size)
@@ -62,26 +67,24 @@ class GridMap:
         start = (grid_start_x, grid_start_y)
         goal = (grid_goal_x, grid_goal_y)
 
-        #grid_cpy = self.grid.copy()
-        #grid_cpy[grid_start_y][grid_start_x] = 8
-        #grid_cpy[grid_goal_y][grid_goal_x] = 9
-        #self.show_map(filename="pos.txt", diff_grid=grid_cpy)
-        #grid_cpy[grid_start_y][grid_start_x] = 0
-        #grid_cpy[grid_goal_y][grid_goal_x] = 0
-
-        queue = []
-        queue.append(start)
+        p_queue = PriorityQueue()
+        p_queue.put((0, start))
         came_from = dict()
+        cost_so_far = dict()
         came_from[start] = None
+        cost_so_far[start] = 0
 
         # MAP GRID
-        while len(queue) != 0:
-            current = queue.pop(0)
+        while not p_queue.empty():
+            current = p_queue.get()[1]
             if current == goal:
                 break
             for next in get_neighboars(current):
-                if next not in came_from:
-                    queue.append(next)
+                new_cost = cost_so_far[current] + 1
+                if next not in cost_so_far or new_cost < cost_so_far[next]:
+                    cost_so_far[next] = new_cost
+                    priority = new_cost + heuristic(next, goal)
+                    p_queue.put((priority, next))
                     came_from[next] = current
         
         # BUILD PATH

@@ -1,8 +1,8 @@
-from i_npc import I_NPC
+from npc import NPC
 from settings import *
 
 
-class RL_Enemy(I_NPC):
+class RL_Enemy(NPC):
     def __init__(self, pos, groups, sprite_sheet, collisions, player):
         super().__init__(pos, groups, sprite_sheet, collisions, player)
 

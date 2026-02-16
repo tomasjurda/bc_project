@@ -123,4 +123,7 @@ class Player_Heavy_Attack(Heavy_Attack):
                 player.change_state(player.states["IDLE"])
                 player.stamina += 2.0
 
-        
+
+class Player_Dialog(State):
+    def enter(self, player):
+        player.set_animation(speed=8, loop=True) 

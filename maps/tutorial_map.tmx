@@ -73,7 +73,7 @@
  </objectgroup>
  <objectgroup color="#ff0000" id="4" name="InteractObjects">
   <object id="6" name="sword" type="chest" gid="668" x="256" y="576.333" width="64" height="62"/>
-  <object id="51" name="crossroad-1085 635" type="door" gid="655" x="599.667" y="256" width="82" height="100"/>
+  <object id="51" name="crossroad-1150 635" type="door" gid="655" x="599.667" y="256" width="82" height="100"/>
  </objectgroup>
  <objectgroup id="6" name="SpawnPoints">
   <object id="34" name="Player" x="640" y="766">
@@ -87,10 +87,10 @@
   <object id="39" x="769.75" y="903" width="61.25" height="51.9167"/>
   <object id="40" x="324.5" y="256.666" width="116" height="57.75"/>
   <object id="41" x="836.75" y="257.25" width="120.75" height="53.5"/>
-  <object id="42" x="110" y="216" width="1061.67" height="39.6667"/>
-  <object id="43" x="110.333" y="256.333" width="47.6667" height="895"/>
-  <object id="44" x="141" y="1027.01" width="989.33" height="118.333"/>
-  <object id="45" x="1119" y="226.667" width="52" height="921.333"/>
+  <object id="42" x="129.333" y="167" width="1019.84" height="88.6667"/>
+  <object id="43" x="128.536" y="259.362" width="50.1667" height="895"/>
+  <object id="44" x="176" y="1030.01" width="975.663" height="118.333"/>
+  <object id="45" x="1101.33" y="258.675" width="48.5" height="893.083"/>
   <object id="46" x="966.833" y="899.166" width="52" height="53"/>
   <object id="48" x="256.333" y="516" width="63" height="60"/>
  </objectgroup>

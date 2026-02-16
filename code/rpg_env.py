@@ -5,7 +5,7 @@ from os.path import join
 import os
 
 from rl_enemy import RL_Enemy
-from i_npc import I_NPC
+from npc import NPC
 from combat_handler import CombatHandler
 from settings import *
 from sprite_group import AllSprites
@@ -52,7 +52,7 @@ class RpgEnv(gym.Env):
         
         self.agent.states["RUN"]["state"] = Basic_Enemy_Run()
 
-        self.opponent = I_NPC(
+        self.opponent = NPC(
             (600, 400), [self.all_sprites],
             pygame.image.load(join('graphics', 'models', 'Player_BLUE.png')),
             self.collision_sprites,

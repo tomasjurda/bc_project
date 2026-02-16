@@ -8,6 +8,7 @@ myenv/Scripts/activate
 python -m pip install -r requirements.txt
 python code/main.py
 ```
+
 ### LINUX
 ```bash
 python3 -m venv myenv
@@ -16,39 +17,40 @@ python3 -m pip install -r requirements.txt
 python3 code/main.py
 ```
 
+
 ## CONTROLS
+### COMBAT
 - WASD = movement
 - SPACE = dodge
 - LEFT MOUSE BUTTON = light attack
 - RIGHT MOUSE BUTTON = heavy attack
     - F = feint 
 - R (hold) = Block
+- Q = break when stunned
+
+### OTHER
 - E = interacting (doors)
 - X = debug mode
+
 
 ## DATASET
 data/npc_dataset.csv
 - dist (int): distance to player
 - npc_hp_status (cat): CRITICAL = (1-19)% , HURT = (20-49)% , OK = (50-100)%
 - npc_stamina_status (cat): TIRED = (0-29)% , OK = (30-100)%
-- npc_current_action (cat): can be IDLE, RUN, BLOCK or HEAVY_ATTACK
+- npc_current_action (cat): can be IDLE, RUN, BLOCK, HEAVY_ATTACK or STUN
 - player_hp_status (cat): CRITICAL = (1-19)% , HURT = (20-49)% , OK = (50-100)%
 - player_stamina_status (cat): TIRED = (0-29)% , OK = (30-100)%
-- player_action (cat): can be any state (IDLE, RUN, BLOCK, DODGE, LIGHT_ATTACK, HEAVY_ATTACK, HURT)
+- player_action (cat): can be any state (IDLE, RUN, BLOCK, DODGE, LIGHT_ATTACK, HEAVY_ATTACK, STUN)
 - new_action (cat): how should the NPC react
 
-## ROADMAP
-- pathfinding A*
-- RL: vytvoření env (gymnasium), trénink
-- jednoduché AI základních nepřátel
-- využití LLM pro interakci s NPC
 
+## ROADMAP PROJEKTU
 
-
-## TO DO NOW
-1. [x] NOVÝ STROM
-2. [x] ENEMY selection při vstupu
-3. [x] NOVÝ RL (reward...) 
-4. [x] path v debugu
-5. [x] SMART, BASIC hostile NPC + non hostile NPC  
-6. [ ] FINAL POLISH (A*, detaily)
+- [x] vytvoření základní rpg hry
+- [x] dokončení combat systému
+- [x] základní stavová logika řešení animací a ovládání
+- [x] implementace path findingu pro npc
+- [x] implementace základní rozhodovací mechaniky a jednoduchého if/else + rozhodování pomocí DecisionTreeClasifier
+- [x] vytvoření trénovacího prostředí s použitím gymnasium a natrénování modelu PPO (stable_baselines3) pomocí Reinforcement learning
+- [ ] využití LLM pro interakci s NPC

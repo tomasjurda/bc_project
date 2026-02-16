@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="19">
+ <tileset firstgid="1" source="../graphics/tilesets_64x64/TX Tileset Grass_64.tsx"/>
+ <tileset firstgid="65" source="../graphics/tilesets_64x64/TX Tileset Wall_64.tsx"/>
+ <tileset firstgid="321" source="../graphics/tilesets_64x64/TX Struct_64.tsx"/>
+ <tileset firstgid="577" source="../graphics/tilesets_64x64/TX Tileset Stone Ground_64.tsx"/>
+ <tileset firstgid="641" source="../graphics/tilesets_64x64/Props.tsx"/>
+ <layer id="1" name="Ground" width="16" height="16">
+  <data encoding="csv">
+577,586,579,33,41,34,33,42,33,42,49,33,42,586,586,586,
+586,586,586,50,41,42,41,42,49,34,34,49,50,586,586,586,
+41,49,586,50,41,50,33,41,50,50,33,49,50,42,50,49,
+50,34,586,33,50,41,50,49,41,42,50,34,33,33,49,33,
+33,42,34,34,50,34,33,42,49,33,34,34,50,41,41,49,
+42,34,49,41,49,49,41,33,34,49,33,34,34,49,49,49,
+33,49,50,50,33,49,49,34,41,50,50,50,33,34,42,49,
+34,50,41,50,41,49,41,50,34,42,34,49,41,50,42,41,
+41,34,42,50,42,34,33,50,42,33,50,34,34,34,33,49,
+33,49,49,33,33,41,33,42,33,41,41,50,41,41,49,33,
+42,33,33,42,33,50,34,49,42,49,34,42,42,50,34,41,
+33,50,50,49,49,34,50,50,50,41,49,33,42,49,33,33,
+586,586,586,50,50,33,42,41,49,34,49,42,33,586,586,586,
+586,586,586,33,42,41,41,34,50,50,34,42,34,586,586,586,
+34,50,41,34,49,33,50,33,34,41,42,49,33,33,34,42,
+34,50,34,42,49,34,42,41,34,50,41,42,42,42,34,34
+</data>
+ </layer>
+ <objectgroup id="3" name="OnGroundObjects"/>
+ <layer id="2" name="Walls" width="16" height="16">
+  <data encoding="csv">
+82,83,84,0,0,0,0,0,0,0,0,0,0,82,83,84,
+98,99,100,86,162,163,164,165,162,162,163,164,165,98,99,100,
+114,115,116,102,178,179,180,181,178,178,179,180,181,114,115,116,
+130,131,132,0,0,0,0,0,0,0,0,0,0,130,131,132,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+82,83,84,0,0,0,0,0,0,0,0,0,0,82,83,84,
+98,99,100,162,162,162,87,398,399,87,162,162,162,98,99,100,
+114,115,116,178,178,178,103,414,415,103,178,178,178,114,115,116,
+130,131,132,0,0,0,0,0,0,0,0,0,0,130,131,132
+</data>
+ </layer>
+ <objectgroup id="4" name="Objects">
+  <object id="14" gid="670" x="576" y="1020" width="64" height="154"/>
+  <object id="15" gid="670" x="384" y="1018.5" width="64" height="154"/>
+ </objectgroup>
+ <objectgroup id="5" name="InteractObjects">
+  <object id="18" name="crossroad-1400 60" type="invisible_door" gid="655" x="470.5" y="1025" width="82" height="100"/>
+ </objectgroup>
+ <objectgroup id="6" name="SpawnPoints">
+  <object id="1" name="NPC" type="non_hostile" x="320" y="317.333">
+   <point/>
+  </object>
+  <object id="2" name="NPC" type="non_hostile" x="705.333" y="320">
+   <point/>
+  </object>
+  <object id="3" name="NPC" type="non_hostile" x="126.667" y="445.333">
+   <point/>
+  </object>
+  <object id="4" name="NPC" type="non_hostile" x="896" y="445.333">
+   <point/>
+  </object>
+ </objectgroup>
+ <objectgroup id="7" name="Collisions">
+  <object id="5" x="2.66667" y="771.333" width="186" height="246"/>
+  <object id="6" x="191.333" y="834.667" width="286.667" height="121.333"/>
+  <object id="7" x="543.333" y="836.667" width="288" height="120.667"/>
+  <object id="8" x="834.667" y="771.333" width="186.667" height="250"/>
+  <object id="9" x="2.66667" y="4" width="185.333" height="248"/>
+  <object id="10" x="192" y="67" width="639" height="122"/>
+  <object id="11" x="834" y="3" width="187" height="250"/>
+  <object id="12" x="963" y="256" width="59.5" height="513.5"/>
+  <object id="13" x="4" y="256" width="58" height="511"/>
+  <object id="16" x="386" y="963" width="61" height="57.5"/>
+  <object id="17" x="578" y="963.5" width="61" height="57"/>
+ </objectgroup>
+</map>

@@ -7,7 +7,7 @@ from combat_handler import CombatHandler
 
 
 class Level:
-    def __init__(self, tmx_file : str, player : Player):
+    def __init__(self, tmx_file : str):
         self.map = pytmx.load_pygame(tmx_file)
         self.map_width = self.map.width
         self.map_height = self.map.height
@@ -22,18 +22,24 @@ class Level:
         self.player_spawn_positions = []
         
         # add player to level
-        self.player = player
+        self.player = None
         # load map layers into groups
         self.load_map()
     
 
     def check_interactions(self):
         if self.player.interacting:
+            self.player.interacting = False
+            for npc in self.enemy_sprites:
+                if self.player.rect.colliderect(npc.rect) and not npc.hostile:
+                    self.player.change_state(self.player.states["DIALOG"])
+                    return None
+
+
             for inter in self.interact_sprites:
                 if self.player.rect.colliderect(inter.rect):
                     if inter.type == "door" or inter.type == "invisible_door":
                         split = inter.name.split("-")
-                        #print(split)
                         location = split[0]
                         pos_split = split[1].split()
                         spawn = list(map(int, [pos_split[0], pos_split[1]]))
@@ -47,8 +53,8 @@ class Level:
                                 "options" : options  }
                     else:
                         print(inter.type)
-                
-            self.player.interacting = False
+                        return None
+                        
         return None
     
 
