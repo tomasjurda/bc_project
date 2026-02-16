@@ -32,7 +32,8 @@ class Level:
             self.player.interacting = False
             for npc in self.enemy_sprites:
                 if self.player.rect.colliderect(npc.rect) and not npc.hostile:
-                    self.player.change_state(self.player.states["DIALOG"])
+                    print("dialog")
+                    #self.player.change_state(self.player.states["DIALOG"])
                     return None
 
 
