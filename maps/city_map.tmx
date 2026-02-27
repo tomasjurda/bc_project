@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="19">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="22">
  <tileset firstgid="1" source="../graphics/tilesets_64x64/TX Tileset Grass_64.tsx"/>
  <tileset firstgid="65" source="../graphics/tilesets_64x64/TX Tileset Wall_64.tsx"/>
  <tileset firstgid="321" source="../graphics/tilesets_64x64/TX Struct_64.tsx"/>
@@ -41,43 +41,38 @@
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
 82,83,84,0,0,0,0,0,0,0,0,0,0,82,83,84,
-98,99,100,162,162,162,87,398,399,87,162,162,162,98,99,100,
-114,115,116,178,178,178,103,414,415,103,178,178,178,114,115,116,
-130,131,132,0,0,0,0,0,0,0,0,0,0,130,131,132
+98,99,100,86,87,88,89,0,0,85,86,87,88,98,99,100,
+114,115,116,102,103,104,105,0,0,101,102,103,104,114,115,116,
+130,131,132,0,0,0,121,0,0,117,0,0,0,130,131,132
 </data>
  </layer>
- <objectgroup id="4" name="Objects">
-  <object id="14" gid="670" x="576" y="1020" width="64" height="154"/>
-  <object id="15" gid="670" x="384" y="1018.5" width="64" height="154"/>
- </objectgroup>
+ <objectgroup id="4" name="Objects"/>
  <objectgroup id="5" name="InteractObjects">
   <object id="18" name="crossroad-1400 60" type="invisible_door" gid="655" x="470.5" y="1025" width="82" height="100"/>
  </objectgroup>
  <objectgroup id="6" name="SpawnPoints">
-  <object id="1" name="NPC" type="non_hostile" x="320" y="317.333">
+  <object id="1" name="NPC" type="blacksmith_grom" x="710" y="319.333">
    <point/>
   </object>
-  <object id="2" name="NPC" type="non_hostile" x="705.333" y="320">
+  <object id="2" name="NPC" type="random_guard" x="613.333" y="802">
    <point/>
   </object>
-  <object id="3" name="NPC" type="non_hostile" x="126.667" y="445.333">
-   <point/>
-  </object>
-  <object id="4" name="NPC" type="non_hostile" x="896" y="445.333">
+  <object id="3" name="NPC" type="merchant_silas" x="262.667" y="317.333">
    <point/>
   </object>
  </objectgroup>
  <objectgroup id="7" name="Collisions">
   <object id="5" x="2.66667" y="771.333" width="186" height="246"/>
-  <object id="6" x="191.333" y="834.667" width="286.667" height="121.333"/>
-  <object id="7" x="543.333" y="836.667" width="288" height="120.667"/>
+  <object id="6" x="191.333" y="834.667" width="192.334" height="121.333"/>
+  <object id="7" x="640.333" y="836.667" width="191" height="120.667"/>
   <object id="8" x="834.667" y="771.333" width="186.667" height="250"/>
   <object id="9" x="2.66667" y="4" width="185.333" height="248"/>
   <object id="10" x="192" y="67" width="639" height="122"/>
   <object id="11" x="834" y="3" width="187" height="250"/>
   <object id="12" x="963" y="256" width="59.5" height="513.5"/>
   <object id="13" x="4" y="256" width="58" height="511"/>
-  <object id="16" x="386" y="963" width="61" height="57.5"/>
-  <object id="17" x="578" y="963.5" width="61" height="57"/>
+  <object id="19" x="385.333" y="833.333" width="54.6667" height="188.667"/>
+  <object id="20" x="583.333" y="832.667" width="56" height="190.667"/>
+  <object id="21" x="420" y="982"/>
  </objectgroup>
 </map>

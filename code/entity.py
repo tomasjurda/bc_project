@@ -8,7 +8,7 @@ from player_states import *
 
 class Entity(pygame.sprite.Sprite):
     g_map = GridMap()
-    
+
     def __init__(self, pos, groups, sprite_sheet):
         super().__init__(groups)
         self.ysort = True
@@ -30,74 +30,87 @@ class Entity(pygame.sprite.Sprite):
         self.current_animation = None
         self.frame_width = 64
         self.frame_height = 64
-        self.direction_state = 'down'
-        
+        self.direction_state = "down"
+
         # Hitbox and sprites
         self.sprite_sheet = sprite_sheet
         self.image = pygame.Surface((self.frame_width, self.frame_height))
         self.rect = self.image.get_frect(center=pos)
-        self.hitbox_rect = self.rect.inflate(-30,-30)
+        self.hitbox_rect = self.rect.inflate(-30, -30)
         self.attack_hitbox = None
         # Movement
         self.direction = pygame.Vector2()
         self.speed = 70
         self.cooldowns = {}
 
-
     def change_state(self, state):
         if self.stamina >= state["stamina_cost"]:
             self.stamina -= state["stamina_cost"]
             new_state = state["state"]
-            clean_state_name = new_state.__class__.__name__.replace("Player_", "").replace("Enemy_", "").replace("Basic_", "").upper()
+            clean_state_name = (
+                new_state.__class__.__name__.replace("Player_", "")
+                .replace("Enemy_", "")
+                .replace("Basic_", "")
+                .upper()
+            )
             self.current_state_name = clean_state_name
             self.fsm.change_state(new_state)
-           
 
-    def load_frames(self, row , cols, rotate):
+    def load_frames(self, row, cols, rotate):
         """Extract frames from a given row in the sprite sheet."""
         frames = []
         for i in range(cols):
-            frame = pygame.transform.flip(self.sprite_sheet.subsurface((i * self.frame_width, row * self.frame_height, self.frame_width, self.frame_height)), rotate , 0)
+            frame = pygame.transform.flip(
+                self.sprite_sheet.subsurface(
+                    (
+                        i * self.frame_width,
+                        row * self.frame_height,
+                        self.frame_width,
+                        self.frame_height,
+                    )
+                ),
+                rotate,
+                0,
+            )
             frames.append(frame)
         return frames
-
 
     def respawn(self):
         self.hitpoints = self.max_hitpoints
         self.cooldowns["imunity"] = 1.0
-        
 
     def update_direction(self):
         # Set direction state for animation
         if abs(self.direction.x) > abs(self.direction.y):
-                self.direction_state = 'right' if self.direction.x > 0 else 'left'
+            self.direction_state = "right" if self.direction.x > 0 else "left"
         else:
-            self.direction_state = 'down' if self.direction.y > 0 else 'up'
+            self.direction_state = "down" if self.direction.y > 0 else "up"
 
-
-    def move(self, collision_sprites, extra = 1):
+    def move(self, collision_sprites, extra=1):
         self.hitbox_rect.x += self.direction.x * self.speed * self.dt * extra
-        #self.rect.x += self.direction.x * self.speed * self.dt * extra
-        self.collision(collision_sprites, 'horizontal')
+        # self.rect.x += self.direction.x * self.speed * self.dt * extra
+        self.collision(collision_sprites, "horizontal")
         self.hitbox_rect.y += self.direction.y * self.speed * self.dt * extra
-        #self.rect.y += self.direction.y * self.speed * self.dt * extra
-        self.collision(collision_sprites,'vertical')
+        # self.rect.y += self.direction.y * self.speed * self.dt * extra
+        self.collision(collision_sprites, "vertical")
         self.rect.center = self.hitbox_rect.center
-        #self.hitbox_rect.center = self.rect.center
-        
+        # self.hitbox_rect.center = self.rect.center
 
-    def collision(self, collision_sprites ,direction):
+    def collision(self, collision_sprites, direction):
         for sprite in collision_sprites:
             if sprite.rect.colliderect(self.hitbox_rect):
-                if direction == 'horizontal':
-                    if self.direction.x > 0 : self.hitbox_rect.right = sprite.rect.left 
-                    if self.direction.x < 0 : self.hitbox_rect.left = sprite.rect.right
+                if direction == "horizontal":
+                    if self.direction.x > 0:
+                        self.hitbox_rect.right = sprite.rect.left
+                    if self.direction.x < 0:
+                        self.hitbox_rect.left = sprite.rect.right
                 else:
-                    if self.direction.y > 0 : self.hitbox_rect.bottom = sprite.rect.top
-                    if self.direction.y < 0 : self.hitbox_rect.top = sprite.rect.bottom
-    
+                    if self.direction.y > 0:
+                        self.hitbox_rect.bottom = sprite.rect.top
+                    if self.direction.y < 0:
+                        self.hitbox_rect.top = sprite.rect.bottom
 
-    def draw_ui(self, surface : pygame.surface.Surface, offset, debug_mode):
+    def draw_ui(self, surface: pygame.surface.Surface, offset, debug_mode):
         bar_width = self.rect.width
         bar_height = 5
         health_ratio = self.hitpoints / self.max_hitpoints
@@ -107,17 +120,23 @@ class Entity(pygame.sprite.Sprite):
         health_y = self.rect.y - offset.y - bar_height * 2
         stamina_y = self.rect.y - offset.y - bar_height
 
-        pygame.draw.rect(surface, 'black', (x, health_y, bar_width, bar_height * 2))
-        pygame.draw.rect(surface, 'green', (x, health_y, bar_width * health_ratio, bar_height))
-        pygame.draw.rect(surface, 'yellow', (x, stamina_y, bar_width * stamina_ratio, bar_height))
+        pygame.draw.rect(surface, "black", (x, health_y, bar_width, bar_height * 2))
+        pygame.draw.rect(
+            surface, "green", (x, health_y, bar_width * health_ratio, bar_height)
+        )
+        pygame.draw.rect(
+            surface, "yellow", (x, stamina_y, bar_width * stamina_ratio, bar_height)
+        )
 
         if debug_mode:
             state_y = self.rect.y - offset.y + self.frame_height - 10
             font = pygame.font.Font(None, 20)
-            state = font.render(f"{self.current_state_name}", True, 'white')
+            state = font.render(f"{self.current_state_name}", True, "white")
             surface.blit(state, (x + 32 - state.width / 2, state_y))
 
-            hitbox_surface = pygame.Surface((self.hitbox_rect.width, self.hitbox_rect.height), pygame.SRCALPHA)
+            hitbox_surface = pygame.Surface(
+                (self.hitbox_rect.width, self.hitbox_rect.height), pygame.SRCALPHA
+            )
             hitbox_col = None
             if self.is_dodging:
                 hitbox_col = (0, 0, 0, 128)
@@ -128,49 +147,75 @@ class Entity(pygame.sprite.Sprite):
             else:
                 hitbox_col = (0, 255, 0, 128)
             hitbox_surface.fill(hitbox_col)
-            surface.blit(hitbox_surface, (self.hitbox_rect.x - offset.x, self.hitbox_rect.y - offset.y))
+            surface.blit(
+                hitbox_surface,
+                (self.hitbox_rect.x - offset.x, self.hitbox_rect.y - offset.y),
+            )
 
             if hasattr(self, "path_to_player"):
                 if self.current_state_name == "RUN":
                     if self.path_to_player:
                         for point in self.path_to_player:
-                            pygame.draw.rect(surface, 'black', (point[0] - offset.x, point[1] - offset.y, 5 , 5))
+                            pygame.draw.rect(
+                                surface,
+                                "black",
+                                (point[0] - offset.x, point[1] - offset.y, 5, 5),
+                            )
                     if self.current_target:
-                        pygame.draw.rect(surface, 'black', (self.current_target[0] - offset.x, self.current_target[1] - offset.y, 5 , 5))
-
+                        pygame.draw.rect(
+                            surface,
+                            "black",
+                            (
+                                self.current_target[0] - offset.x,
+                                self.current_target[1] - offset.y,
+                                5,
+                                5,
+                            ),
+                        )
 
             if hasattr(self, "brain"):
-                brain_text = font.render(f"{self.brain_type}", True, 'white')
-                surface.blit(brain_text, (x + 32 - brain_text.width / 2, state_y + state.height))
+                brain_text = font.render(f"{self.brain_type}", True, "white")
+                surface.blit(
+                    brain_text, (x + 32 - brain_text.width / 2, state_y + state.height)
+                )
 
+            if hasattr(self, "hostile"):
+                if not self.hostile:
+                    aff_text = font.render(f"{self.affinity}", True, "white")
+                    surface.blit(
+                        aff_text,
+                        (
+                            x + 32 - aff_text.width / 2,
+                            state_y + state.height + brain_text.height,
+                        ),
+                    )
 
     def create_attack_hitbox(self):
         if self.cooldowns["imunity"] > 0:
             self.cooldowns["imunity"] = 0
 
         self.attack_hitbox = self.hitbox_rect.copy()
-        if self.direction_state == 'right':
+        if self.direction_state == "right":
             self.attack_hitbox.midleft = self.hitbox_rect.midright
-            self.attack_hitbox.move_ip(-5 , 0)
-            
-        elif self.direction_state == 'left':
-            self.attack_hitbox.midright = self.hitbox_rect.midleft
-            self.attack_hitbox.move_ip(5 , 0)
+            self.attack_hitbox.move_ip(-5, 0)
 
-        elif self.direction_state == 'up':
+        elif self.direction_state == "left":
+            self.attack_hitbox.midright = self.hitbox_rect.midleft
+            self.attack_hitbox.move_ip(5, 0)
+
+        elif self.direction_state == "up":
             self.attack_hitbox.midbottom = self.hitbox_rect.midtop
-            self.attack_hitbox.move_ip(0 , 5)
+            self.attack_hitbox.move_ip(0, 5)
 
         else:
             self.attack_hitbox.midtop = self.hitbox_rect.midbottom
-            self.attack_hitbox.move_ip(0 , -5)
+            self.attack_hitbox.move_ip(0, -5)
 
         self.hit_entities = []
 
-
-    def take_hit(self, damage, attack_type , knockback):
+    def take_hit(self, damage, attack_type, knockback):
         self.hitpoints -= damage * attack_type
-        
+
         if hasattr(self, "hostile"):
             if not self.hostile:
                 self.hostile = True
@@ -188,9 +233,8 @@ class Entity(pygame.sprite.Sprite):
                 self.direction = knockback
             else:
                 self.direction = pygame.Vector2()
-        
 
-    def set_animation(self, speed=8, loop = True, loop_start = 0, sync_with_current = False):
+    def set_animation(self, speed=8, loop=True, loop_start=0, sync_with_current=False):
         frames = self.states[self.current_state_name]["animation"][self.direction_state]
 
         saved_frame_index = 0
@@ -200,34 +244,32 @@ class Entity(pygame.sprite.Sprite):
             saved_frame_index = self.current_animation.frame_index
             saved_time = self.current_animation.time_accumulator
 
-        self.current_animation = Animation(frames, speed, loop , loop_start)
-        
+        self.current_animation = Animation(frames, speed, loop, loop_start)
+
         if sync_with_current:
             safe_index = saved_frame_index if saved_frame_index < len(frames) else 0
             self.current_animation.frame_index = safe_index
             self.current_animation.time_accumulator = saved_time
 
-        self.image = self.current_animation.frames[int(self.current_animation.frame_index)]
-
+        self.image = self.current_animation.frames[
+            int(self.current_animation.frame_index)
+        ]
 
     def animate(self):
         if self.current_animation:
             self.image = self.current_animation.update(self.dt)
             if self.cooldowns["imunity"] > 0:
-                self.image = copy(self.image) #self.image.set_alpha(128)
+                self.image = copy(self.image)  # self.image.set_alpha(128)
                 self.image.set_alpha(128)
-
 
     def update_cooldowns(self, dt):
         for key in self.cooldowns:
             if self.cooldowns[key] > 0:
                 self.cooldowns[key] -= dt
 
-
-    def regen_stamina(self, coef = 2):
+    def regen_stamina(self, coef=2):
         if self.stamina < 10.0:
             self.stamina += self.dt * coef * 1.5
-
 
     def update(self, dt):
         pass

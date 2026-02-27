@@ -54,3 +54,10 @@ data/npc_dataset.csv
 - [x] implementace základní rozhodovací mechaniky a jednoduchého if/else + rozhodování pomocí DecisionTreeClasifier
 - [x] vytvoření trénovacího prostředí s použitím gymnasium a natrénování modelu PPO (stable_baselines3) pomocí Reinforcement learning
 - [ ] využití LLM pro interakci s NPC
+
+
+
+### PROBRAT
+- pathsmoothing
+- co vše dát do JSON
+- zda přidat aby se npc viděli na mapě a nebudou tedy běhat přes sebe

@@ -3,13 +3,11 @@ class FSM:
         self.entity = entity
         self.current_state = None
 
-
     def change_state(self, new_state):
         if self.current_state:
             self.current_state.exit(self.entity)
         self.current_state = new_state
         self.current_state.enter(self.entity)
-
 
     def update(self):
         if self.current_state:

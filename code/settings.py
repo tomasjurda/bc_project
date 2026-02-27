@@ -9,6 +9,6 @@ import time as time
 from copy import copy, deepcopy
 
 
-#WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
+# WINDOW_WIDTH, WINDOW_HEIGHT = 1280, 720
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 TILE_SIZE = 64

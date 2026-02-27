@@ -21,7 +21,9 @@ class Player_Idle(Idle):
         elif pressed_keys[pygame.K_e]:
             player.interacting = True
 
-        elif keys[pygame.K_s] or keys[pygame.K_a] or keys[pygame.K_d] or keys[pygame.K_w]:
+        elif (
+            keys[pygame.K_s] or keys[pygame.K_a] or keys[pygame.K_d] or keys[pygame.K_w]
+        ):
             player.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
             player.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
             if player.direction.length_squared() > 0:
@@ -30,7 +32,7 @@ class Player_Idle(Idle):
                 player.change_state(player.states["RUN"])
             else:
                 player.change_state(player.states["IDLE"])
-            
+
 
 class Player_Run(Run):
     def handle_input(self, player):
@@ -53,7 +55,9 @@ class Player_Run(Run):
         elif pressed_keys[pygame.K_e]:
             player.interacting = True
 
-        elif keys[pygame.K_a] or keys[pygame.K_s] or keys[pygame.K_d] or keys[pygame.K_w]:    
+        elif (
+            keys[pygame.K_a] or keys[pygame.K_s] or keys[pygame.K_d] or keys[pygame.K_w]
+        ):
             player.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
             player.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
             if player.direction.length_squared() > 0:
@@ -71,15 +75,13 @@ class Player_Death(State):
     def enter(self, player):
         player.set_animation(speed=5, loop=False)
 
-
     def execute(self, player):
         if player.current_animation.finished:
             player.change_state(player.states["IDLE"])
-        
-    
+
     def exit(self, player):
         player.is_alive = False
-        
+
 
 class Player_Block(Block):
     def handle_input(self, player):
@@ -90,7 +92,9 @@ class Player_Block(Block):
         if released_key[pygame.K_r]:
             player.change_state(player.states["IDLE"])
 
-        elif keys[pygame.K_a] or keys[pygame.K_s] or keys[pygame.K_d] or keys[pygame.K_w]:    
+        elif (
+            keys[pygame.K_a] or keys[pygame.K_s] or keys[pygame.K_d] or keys[pygame.K_w]
+        ):
             player.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
             player.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
             if player.direction.length_squared() > 0:
@@ -113,8 +117,8 @@ class Player_Stun(Stun):
             player.cooldowns["imunity"] = 0.5
             SoundManager.play_sound(player.sound_effects["break"][0])
             player.change_state(player.states["IDLE"])
-            
-            
+
+
 class Player_Heavy_Attack(Heavy_Attack):
     def handle_input(self, player):
         if player.attack_hitbox == None:
@@ -126,4 +130,4 @@ class Player_Heavy_Attack(Heavy_Attack):
 
 class Player_Dialog(State):
     def enter(self, player):
-        player.set_animation(speed=8, loop=True) 
+        player.set_animation(speed=8, loop=True)

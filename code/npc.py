@@ -3,13 +3,24 @@ from joblib import load
 from stable_baselines3 import PPO
 import numpy as np
 
-ACTION_MAP = {"IDLE": 0, "RUN": 1, "DODGE": 2, "BLOCK": 3, "LIGHT_ATTACK": 4, "HEAVY_ATTACK": 5, "STUN": 6}
+ACTION_MAP = {
+    "IDLE": 0,
+    "RUN": 1,
+    "DODGE": 2,
+    "BLOCK": 3,
+    "LIGHT_ATTACK": 4,
+    "HEAVY_ATTACK": 5,
+    "STUN": 6,
+}
+
 
 class NPC(Entity):
-    mlp_brain = PPO.load(join("data", "rl_models" ,"ppo_rpg_agent.zip"))
-    tree_brain = load(join("data", "npc_brain_tree.joblib"))  
+    mlp_brain = PPO.load(join("data", "rl_models", "ppo_rpg_agent.zip"))
+    tree_brain = load(join("data", "npc_brain_tree.joblib"))
 
-    def __init__(self, pos, groups, sprite_sheet, collisions, player, brain_type = "BASIC"):
+    def __init__(
+        self, pos, groups, sprite_sheet, collisions, player, brain_type="BASIC"
+    ):
         super().__init__(pos, groups, sprite_sheet)
 
         # SETTING THIS IN CREATION
@@ -31,22 +42,90 @@ class NPC(Entity):
         self.fsm = FSM(self)
         # STATES AND ANIMATIONS
         self.states = {
-            "IDLE"          : { "state" : Enemy_Idle()                ,   "stamina_cost" : 0.0    ,   "animation" :   { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)}},
-            "RUN"           : { "state" : Enemy_Run()                 ,   "stamina_cost" : 0.0    ,   "animation" :   { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)}},
-            "DODGE"         : { "state" : Enemy_Dodge(1,4)            ,   "stamina_cost" : 3.0    ,   "animation" :   { 'down' : self.load_frames(3, 6 , False), 'right' :  self.load_frames(4, 6, False), 'left' : self.load_frames(4, 6, True),'up' : self.load_frames(5, 6, False)}},
-            "LIGHT_ATTACK"  : { "state" : Enemy_Light_Attack(2,3)     ,  "stamina_cost" : 3.0   , "animation" : { 'down' : self.load_frames(6, 5 , False), 'right' :  self.load_frames(7, 5, False), 'left' : self.load_frames(7, 5, True),'up' : self.load_frames(8, 5, False)}},
-            "HEAVY_ATTACK"  : { "state" : Enemy_Heavy_Attack(3,4)     ,  "stamina_cost" : 5.0   , "animation" : { 'down' : self.load_frames(13, 6 , False), 'right' :  self.load_frames(14, 6, False), 'left' : self.load_frames(14, 6, True),'up' : self.load_frames(15, 6, False)}}, 
-            "STUN"          : { "state" : Enemy_Stun()                ,  "stamina_cost" : 0.0   , "animation" : { 'down' : self.load_frames(0, 6 , False), 'right' :  self.load_frames(1, 6, False), 'left' : self.load_frames(1, 6, True),'up' : self.load_frames(2, 6, False)}},
-            "DEATH"         : { "state" : Enemy_Death()               ,  "stamina_cost" : 0.0   , "animation" : { 'down' : self.load_frames(9, 6 , True), 'right' :  self.load_frames(9, 6, False), 'left' : self.load_frames(9, 6, True),'up' : self.load_frames(9, 6, False)}},
-            "BLOCK"         : { "state" : Enemy_Block(1,6)            ,  "stamina_cost" : 0.0   , "animation" : { 'down' : self.load_frames(10, 6 , True), 'right' :  self.load_frames(11, 6, False), 'left' : self.load_frames(11, 6, True),'up' : self.load_frames(12, 6, False)}}
+            "IDLE": {
+                "state": Enemy_Idle(),
+                "stamina_cost": 0.0,
+                "animation": {
+                    "down": self.load_frames(0, 6, False),
+                    "right": self.load_frames(1, 6, False),
+                    "left": self.load_frames(1, 6, True),
+                    "up": self.load_frames(2, 6, False),
+                },
+            },
+            "RUN": {
+                "state": Enemy_Run(),
+                "stamina_cost": 0.0,
+                "animation": {
+                    "down": self.load_frames(3, 6, False),
+                    "right": self.load_frames(4, 6, False),
+                    "left": self.load_frames(4, 6, True),
+                    "up": self.load_frames(5, 6, False),
+                },
+            },
+            "DODGE": {
+                "state": Enemy_Dodge(1, 4),
+                "stamina_cost": 3.0,
+                "animation": {
+                    "down": self.load_frames(3, 6, False),
+                    "right": self.load_frames(4, 6, False),
+                    "left": self.load_frames(4, 6, True),
+                    "up": self.load_frames(5, 6, False),
+                },
+            },
+            "LIGHT_ATTACK": {
+                "state": Enemy_Light_Attack(2, 3),
+                "stamina_cost": 3.0,
+                "animation": {
+                    "down": self.load_frames(6, 5, False),
+                    "right": self.load_frames(7, 5, False),
+                    "left": self.load_frames(7, 5, True),
+                    "up": self.load_frames(8, 5, False),
+                },
+            },
+            "HEAVY_ATTACK": {
+                "state": Enemy_Heavy_Attack(3, 4),
+                "stamina_cost": 5.0,
+                "animation": {
+                    "down": self.load_frames(13, 6, False),
+                    "right": self.load_frames(14, 6, False),
+                    "left": self.load_frames(14, 6, True),
+                    "up": self.load_frames(15, 6, False),
+                },
+            },
+            "STUN": {
+                "state": Enemy_Stun(),
+                "stamina_cost": 0.0,
+                "animation": {
+                    "down": self.load_frames(0, 6, False),
+                    "right": self.load_frames(1, 6, False),
+                    "left": self.load_frames(1, 6, True),
+                    "up": self.load_frames(2, 6, False),
+                },
+            },
+            "DEATH": {
+                "state": Enemy_Death(),
+                "stamina_cost": 0.0,
+                "animation": {
+                    "down": self.load_frames(9, 6, True),
+                    "right": self.load_frames(9, 6, False),
+                    "left": self.load_frames(9, 6, True),
+                    "up": self.load_frames(9, 6, False),
+                },
+            },
+            "BLOCK": {
+                "state": Enemy_Block(1, 6),
+                "stamina_cost": 0.0,
+                "animation": {
+                    "down": self.load_frames(10, 6, True),
+                    "right": self.load_frames(11, 6, False),
+                    "left": self.load_frames(11, 6, True),
+                    "up": self.load_frames(12, 6, False),
+                },
+            },
         }
-        
-        #COOLDOWNS
-        self.cooldowns= {     
-            "reaction" : 0,
-            "stun" : 0,
-            "imunity" : 0
-        }
+
+        # COOLDOWNS
+        self.cooldowns = {"reaction": 0, "stun": 0, "imunity": 0}
 
         self.hitpoints = self.max_hitpoints = 200
         self.damage = 20
@@ -54,37 +133,61 @@ class NPC(Entity):
 
         # AUDIO
         self.sound_effects = {
-            'hit' : [pygame.mixer.Sound(join('assets', 'sword_hit_1.wav')), pygame.mixer.Sound(join('assets', 'sword_hit_2.wav')),pygame.mixer.Sound(join('assets', 'sword_hit_3.wav'))],
-            'miss' : [pygame.mixer.Sound(join('assets', 'sword_miss_1.wav')),pygame.mixer.Sound(join('assets', 'sword_miss_2.wav')),pygame.mixer.Sound(join('assets', 'sword_miss_3.wav'))],
-            'damage' : [pygame.mixer.Sound(join('assets', 'human_damage_1.wav')),pygame.mixer.Sound(join('assets', 'human_damage_2.wav')),pygame.mixer.Sound(join('assets', 'human_damage_3.wav'))],
-            'block' : [pygame.mixer.Sound(join('assets', 'block_1.wav')),pygame.mixer.Sound(join('assets', 'block_2.wav')),pygame.mixer.Sound(join('assets', 'block_3.wav'))],
-            'parry' : [pygame.mixer.Sound(join('assets', 'parry.wav')), pygame.mixer.Sound(join('assets', 'parry_1.wav')),pygame.mixer.Sound(join('assets', 'parry_2.wav')),pygame.mixer.Sound(join('assets', 'parry_3.wav'))],
-            'dodge' : [pygame.mixer.Sound(join('assets', 'dodge.wav'))],
-            'break' : [pygame.mixer.Sound(join('assets', 'break.wav'))]
+            "hit": [
+                pygame.mixer.Sound(join("assets", "sword_hit_1.wav")),
+                pygame.mixer.Sound(join("assets", "sword_hit_2.wav")),
+                pygame.mixer.Sound(join("assets", "sword_hit_3.wav")),
+            ],
+            "miss": [
+                pygame.mixer.Sound(join("assets", "sword_miss_1.wav")),
+                pygame.mixer.Sound(join("assets", "sword_miss_2.wav")),
+                pygame.mixer.Sound(join("assets", "sword_miss_3.wav")),
+            ],
+            "damage": [
+                pygame.mixer.Sound(join("assets", "human_damage_1.wav")),
+                pygame.mixer.Sound(join("assets", "human_damage_2.wav")),
+                pygame.mixer.Sound(join("assets", "human_damage_3.wav")),
+            ],
+            "block": [
+                pygame.mixer.Sound(join("assets", "block_1.wav")),
+                pygame.mixer.Sound(join("assets", "block_2.wav")),
+                pygame.mixer.Sound(join("assets", "block_3.wav")),
+            ],
+            "parry": [
+                pygame.mixer.Sound(join("assets", "parry.wav")),
+                pygame.mixer.Sound(join("assets", "parry_1.wav")),
+                pygame.mixer.Sound(join("assets", "parry_2.wav")),
+                pygame.mixer.Sound(join("assets", "parry_3.wav")),
+            ],
+            "dodge": [pygame.mixer.Sound(join("assets", "dodge.wav"))],
+            "break": [pygame.mixer.Sound(join("assets", "break.wav"))],
         }
 
         self.change_state(self.states["IDLE"])
 
-
     def face_player(self):
-        if not self.player: return
-        vec_to_player = pygame.Vector2(self.player.rect.center) - pygame.Vector2(self.rect.center)
-        
+        if not self.player:
+            return
+        vec_to_player = pygame.Vector2(self.player.rect.center) - pygame.Vector2(
+            self.rect.center
+        )
+
         if vec_to_player.length_squared() > 0:
             self.direction = vec_to_player.normalize()
             self.update_direction()
         else:
             self.direction = pygame.Vector2()
 
-
     def get_context_rl(self):
-        #dist	npc_hp_status	npc_stamina_status	npc_current_action	player_hp_status	player_stamina_status	player_action	new_action
+        # dist	npc_hp_status	npc_stamina_status	npc_current_action	player_hp_status	player_stamina_status	player_action	new_action
 
         # 1. distance
         data = []
-        dist = pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(self.player.rect.center))
-        data.append(min(dist + rand.randint(-10 , 10) / 400.0, 1.0))
-        
+        dist = pygame.Vector2(self.rect.center).distance_to(
+            pygame.Vector2(self.player.rect.center)
+        )
+        data.append(min(dist + rand.randint(-10, 10) / 400.0, 1.0))
+
         # 2. npc hp 0-1
         data.append(self.hitpoints / self.max_hitpoints)
 
@@ -107,28 +210,29 @@ class NPC(Entity):
         opp_action_one_hot = np.eye(7)[idx_p]
         data.extend(opp_action_one_hot)
 
-        #print(data)
+        # print(data)
         return data
-
 
     def _get_action_index(self, entity):
         idx = ACTION_MAP.get(entity.current_state_name, 0)
-        if idx >= 7: idx = 0 
-        
+        if idx >= 7:
+            idx = 0
+
         return idx
 
-
     def get_context(self):
-        #dist	npc_hp_status	npc_stamina_status	npc_current_action	player_hp_status	player_stamina_status	player_action	new_action
-        #ACTION_MAP = {"IDLE": 0, "RUN": 1, "DODGE": 2, "BLOCK": 3, "LIGHT_ATTACK": 4, "HEAVY_ATTACK": 5, "STUN": 6}
+        # dist	npc_hp_status	npc_stamina_status	npc_current_action	player_hp_status	player_stamina_status	player_action	new_action
+        # ACTION_MAP = {"IDLE": 0, "RUN": 1, "DODGE": 2, "BLOCK": 3, "LIGHT_ATTACK": 4, "HEAVY_ATTACK": 5, "STUN": 6}
         # Mapování stavů HP {"CRITICAL": 0, "HURT": 1, "OK": 2}
         # Mapování stavů Staminy {"TIRED": 0, "OK": 1}
 
         # 1. distance
         data = []
-        dist = pygame.Vector2(self.rect.center).distance_to(pygame.Vector2(self.player.rect.center))
-        data.append(int(dist) + rand.randint(-10 , 10))
-        #print(dist)
+        dist = pygame.Vector2(self.rect.center).distance_to(
+            pygame.Vector2(self.player.rect.center)
+        )
+        data.append(int(dist) + rand.randint(-10, 10))
+        # print(dist)
 
         # 2. NPC hp
         hp_per = self.hitpoints / self.max_hitpoints * 100
@@ -170,26 +274,27 @@ class NPC(Entity):
 
         return data
 
-
     def get_path(self):
-        self.path_to_player = self.g_map.get_path(self.rect.center , self.player.rect.center)
-        #self.g_map.show_path(self.path_to_player)
-        #self.g_map.show_map()
-    
+        self.path_to_player = self.g_map.get_path(
+            self.rect.center, self.player.rect.center
+        )
+        # self.g_map.show_path(self.path_to_player)
+        # self.g_map.show_map()
 
     def update(self, dt):
         self.dt = dt
         self.update_cooldowns(dt)
         self.fsm.update()
         self.animate()
-        
 
     def decide_action(self):
         if not self.hostile:
             return "IDLE"
-        
+
         self.cooldowns["reaction"] = rand.triangular(0.2, 0.25, 0.22)
-        distance_to_player = pygame.Vector2(self.hitbox_rect.center).distance_to(pygame.Vector2(self.player.hitbox_rect.center))
+        distance_to_player = pygame.Vector2(self.hitbox_rect.center).distance_to(
+            pygame.Vector2(self.player.hitbox_rect.center)
+        )
 
         if self.player.current_state_name != "DEATH" and distance_to_player <= 400:
             if self.brain_type == "RL_MLP":
@@ -210,6 +315,3 @@ class NPC(Entity):
             return prediction
         else:
             return "IDLE"
-        
-            
-
