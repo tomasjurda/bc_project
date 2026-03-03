@@ -73,10 +73,10 @@
  </objectgroup>
  <objectgroup color="#ff0000" id="4" name="InteractObjects">
   <object id="6" name="sword" type="chest" gid="668" x="256" y="576.333" width="64" height="62"/>
-  <object id="51" name="crossroad-1150 635" type="door" gid="655" x="599.667" y="256" width="82" height="100"/>
+  <object id="51" name="door_crossroad" type="door" gid="655" x="599.667" y="256" width="82" height="100"/>
  </objectgroup>
  <objectgroup id="6" name="SpawnPoints">
-  <object id="34" name="Player" x="640" y="766">
+  <object id="34" type="player_spawn" x="640" y="766">
    <point/>
   </object>
  </objectgroup>

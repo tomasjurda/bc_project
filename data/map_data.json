@@ -1,0 +1,99 @@
+{
+  "tutorial": {
+    "doors": {
+      "door_crossroad": {
+        "target_level": "crossroad",
+        "spawn_pos": [1150, 650],
+        "options": "BASIC"
+      }
+    },
+    "npcs":
+    {
+      
+    }
+  },
+  "crossroad": {
+    "doors": {
+      "door_tutorial": {
+        "target_level": "tutorial",
+        "spawn_pos": [640, 380],
+        "options": "BASIC"
+      },
+      "door_arena_basic": {
+        "target_level": "arena",
+        "spawn_pos": [700, 1250],
+        "options": "BASIC"
+      },
+      "door_arena_tree": {
+        "target_level": "arena",
+        "spawn_pos": [700, 1250],
+        "options": "TREE"
+      },
+      "door_arena_rl": {
+        "target_level": "arena",
+        "spawn_pos": [700, 1250],
+        "options": "RL_MLP"
+      },
+      "door_arena_spectate": {
+        "target_level": "arena_spectate",
+        "spawn_pos": [700, 1250],
+        "options": "SPECTATE"
+      },
+      "door_city": {
+        "target_level": "city",
+        "spawn_pos": [500, 900],
+        "options": "BASIC"
+      }
+    },
+    "npcs":
+    {
+          
+    }
+  },
+  "arena": {
+    "doors": {
+      "door_crossroad": {
+        "target_level": "crossroad",
+        "spawn_pos": [200, 200],
+        "options": "BASIC"
+      }
+    },
+    "npcs":
+    {
+      "basic_npc_1": { "type": "basic_hostile", "options": "BASIC" },
+      "basic_npc_2": { "type": "basic_hostile", "options": "BASIC" },
+      "basic_npc_3": { "type": "basic_hostile", "options": "BASIC" },
+      "basic_npc_4": { "type": "basic_hostile", "options": "BASIC" },
+      "smart_npc":   { "type": "smart_hostile", "options": "PLACEHOLDER" }
+    }
+  },
+  "arena_spectate": {
+    "doors": {
+      "door_crossroad": {
+        "target_level": "crossroad",
+        "spawn_pos": [950, 200],
+        "options": "BASIC"
+      }
+    },
+    "npcs":
+    {
+      "rl_mlp": { "type": "smart_hostile", "options": "RL_MLP" },
+      "tree":   { "type": "smart_hostile", "options": "TREE" }
+    }
+  },
+  "city": {
+    "doors": {
+      "door_crossroad": {
+        "target_level": "crossroad",
+        "spawn_pos": [1400, 150],
+        "options": "BASIC"
+      }
+    },
+    "npcs":
+    {
+      "blacksmith_grom": { "type": "non_hostile", "options": "BASIC" },
+      "merchant_silas":  { "type": "non_hostile", "options": "BASIC" },
+      "random_guard":   { "type": "non_hostile", "options": "BASIC" }
+    }
+  }
+}

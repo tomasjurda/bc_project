@@ -47,17 +47,17 @@
 </data>
  </layer>
  <objectgroup id="4" name="Objects"/>
- <objectgroup id="5" name="InteractObjects">
-  <object id="18" name="crossroad-1400 60" type="invisible_door" gid="655" x="470.5" y="1025" width="82" height="100"/>
+ <objectgroup color="#ff0000" id="5" name="InteractObjects">
+  <object id="18" name="door_crossroad" type="invisible_door" gid="655" x="470.5" y="1025" width="82" height="100"/>
  </objectgroup>
  <objectgroup id="6" name="SpawnPoints">
-  <object id="1" name="NPC" type="blacksmith_grom" x="710" y="319.333">
+  <object id="1" name="blacksmith_grom" type="npc_spawn" x="710" y="319.333">
    <point/>
   </object>
-  <object id="2" name="NPC" type="random_guard" x="613.333" y="802">
+  <object id="2" name="random_guard" type="npc_spawn" x="613.333" y="802">
    <point/>
   </object>
-  <object id="3" name="NPC" type="merchant_silas" x="262.667" y="317.333">
+  <object id="3" name="merchant_silas" type="npc_spawn" x="262.667" y="317.333">
    <point/>
   </object>
  </objectgroup>
@@ -73,6 +73,5 @@
   <object id="13" x="4" y="256" width="58" height="511"/>
   <object id="19" x="385.333" y="833.333" width="54.6667" height="188.667"/>
   <object id="20" x="583.333" y="832.667" width="56" height="190.667"/>
-  <object id="21" x="420" y="982"/>
  </objectgroup>
 </map>
