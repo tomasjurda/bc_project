@@ -57,9 +57,8 @@ data/npc_dataset.csv
 
 
 
-### PROBRAT
+### LAST TO DO
 - [x] pathsmoothing
-- [ ] přetrénovat TREE a RL model
+- [x] přetrénovat TREE a RL model
 - [x] TREE vs RL
-- [ ] FINE TUNING
 - [ ] poslední úpravy

@@ -1,12 +1,8 @@
 from copy import copy
 import pygame
 
-from source.fsm.fsm import FSM
 from source.utils.grid_map import GridMap
 from source.utils.animation import Animation
-
-# from enemy_states import *
-# from player_states import *
 
 
 class Entity(pygame.sprite.Sprite):
@@ -82,6 +78,7 @@ class Entity(pygame.sprite.Sprite):
     def respawn(self):
         """respawn logic"""
         self.hitpoints = self.max_hitpoints
+        self.stamina = self.max_stamina
         self.cooldowns["imunity"] = 1.0
 
     def update_direction(self):
@@ -116,7 +113,7 @@ class Entity(pygame.sprite.Sprite):
                     if self.direction.y < 0:
                         self.hitbox_rect.top = sprite.rect.bottom
 
-    def draw_ui(self, surface: pygame.surface.Surface, offset, debug_mode):
+    def draw_ui(self, surface: pygame.Surface, offset, debug_mode):
         """method for basic UI visualisation + debug informations"""
         bar_width = self.rect.width
         bar_height = 5

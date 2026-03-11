@@ -3,13 +3,8 @@
 import random
 import pygame
 
-from source.utils.sound_manager import SoundManager
 
-# from source.entities.player import Player
-# from source.entities.hostile_npc import HostileNPC
-
-
-class CombatHandler:
+class CombatManager:
     def check_hits(self, player, enemy_sprites):
         # PLAYER ATTACK
         if player.attack_hitbox:
@@ -30,8 +25,6 @@ class CombatHandler:
                 ):
                     player.hit_entities.append(enemy)
                     self.resolve_hit(player, enemy, attack_type)
-            if not player.hit_entities:
-                SoundManager.play_sound(player.sound_effects["miss"][0])
 
         # ENEMY ATTACKS
         for enemy in enemy_sprites:
@@ -46,12 +39,10 @@ class CombatHandler:
                 ):
                     enemy.hit_entities.append(player)
                     self.resolve_hit(enemy, player, attack_type)
-                if not enemy.hit_entities:
-                    SoundManager.play_sound(enemy.sound_effects["miss"][0])
 
     def resolve_hit(self, attacker, defender, attack_type):
         if defender.is_dodging:
-            SoundManager.play_sound(random.choice(attacker.sound_effects["miss"]))
+            random.choice(attacker.sound_effects["miss"]).play()
             return
 
         if defender.is_blocking and attack_type == 1 or defender.is_parying:
@@ -73,13 +64,11 @@ class CombatHandler:
             )
             if cos_angle > 0:
                 if defender.is_parying:
-                    SoundManager.play_sound(defender.sound_effects["parry"][0])
+                    defender.sound_effects["parry"][0].play()
                     attacker.take_hit(0, 3, pygame.Vector2())
                     return
                 else:
-                    SoundManager.play_sound(
-                        random.choice(attacker.sound_effects["hit"])
-                    )
+                    random.choice(attacker.sound_effects["hit"]).play()
                     return
             else:
                 pass
@@ -89,5 +78,5 @@ class CombatHandler:
         )
         if knockback_dir.length_squared() > 0:
             knockback_dir.normalize_ip()
-        SoundManager.play_sound(random.choice(attacker.sound_effects["damage"]))
+        random.choice(attacker.sound_effects["damage"]).play()
         defender.take_hit(attacker.damage, attack_type, knockback_dir)

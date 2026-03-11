@@ -1,10 +1,16 @@
-from os.path import join
 import pygame
 
 from source.utils.sprite_manager import SpriteManager
+from source.utils.data_manager import DataManager
+from source.utils.sound_manager import SoundManager
+from source.utils.quest_manager import QuestManager
+
 from source.core.level import Level
+
 from source.entities.entity import Entity
 from source.entities.player import Player
+
+from source.dialogs.dialog import DialogUI
 from source.core.settings import WINDOW_HEIGHT, WINDOW_WIDTH
 
 
@@ -17,45 +23,68 @@ class Game:
         self.debug_mode = False
         self.game_speed = 1
 
+        # LOAD DATA
+        SpriteManager.load_sprites()
+        DataManager.load_map_and_npc_data()
+        DataManager.preload_ai_models()
 
-        SpriteManager.add_spritesheet("player_model", join("graphics", "models", "Player.png"))
-        SpriteManager.add_spritesheet("enemy_model" , join("graphics", "models", "Player_BLUE.png"))
-        
+        SoundManager.init(enable_audio=True)
+        SoundManager.load_all_sounds()
+        SoundManager.set_master_volume(0.4)
 
+        self.quest_manager = QuestManager()
         self.player = Player(
             (0, 0),
             {},
-            SpriteManager.get_spritesheet("player_model"),
+            SpriteManager.get_spritesheet("player"),
         )
 
-        self.quests = {"hammer_quest": "not_started"}
-
-        # load maps
-        self.levels = {
-            "tutorial": Level("maps/tutorial_map.tmx", "tutorial", self.quests),
-            "crossroad": Level("maps/crossroad_map.tmx", "crossroad", self.quests),
-            "arena": Level("maps/arena_map.tmx", "arena", self.quests),
-            "arena_spectate": Level(
-                "maps/map_arena_spectate.tmx", "arena_spectate", self.quests
-            ),
-            "city": Level("maps/city_map.tmx", "city", self.quests),
+        self.level_configs = {
+            "tutorial": "maps/tutorial_map.tmx",
+            "crossroad": "maps/crossroad_map.tmx",
+            "arena": "maps/arena_map.tmx",
+            "arena_spectate": "maps/map_arena_spectate.tmx",
+            "city": "maps/city_map.tmx",
         }
 
+        self.level_cache = {}
+        self.MAX_CACHE_SIZE = 3
+
+        self.dialog_ui = DialogUI()
         self.current_level = None
         self.switch_level("tutorial")
 
-    def switch_level(self, name, spawn_pos=None, options=None):
+    def switch_level(self, name, spawn_pos=None, mode=None):
         if self.current_level:
+            # killing entities and removing player in last level
             self.current_level.kill_entities()
-
             if self.current_level.all_sprites.has(self.player):
                 self.current_level.all_sprites.remove(self.player)
-        self.current_level = self.levels[name]
+
+        if name in self.level_cache:
+            # new level already in cache => load from cache
+            self.current_level = self.level_cache[name]
+            self.level_cache[name] = self.level_cache.pop(name)
+
+        else:
+            # new level object needs to be created and added to cache
+            tmx_file = self.level_configs[name]
+            new_level = Level(tmx_file, name, self.quest_manager, self.dialog_ui)
+
+            if len(self.level_cache) >= self.MAX_CACHE_SIZE:
+                oldest_level_name = next(iter(self.level_cache))
+                oldest_level = self.level_cache.pop(oldest_level_name)
+                del oldest_level
+
+            self.level_cache[name] = new_level
+            self.current_level = new_level
+
         self.current_level.player = self.player
 
         # updating player for new level
         if spawn_pos is None:
             spawn_pos = self.current_level.player_spawn_positions[0]
+
         self.player.rect.center = spawn_pos
         self.player.hitbox_rect.center = spawn_pos
         self.current_level.all_sprites.add(self.player)
@@ -68,7 +97,9 @@ class Game:
 
         # map construction for path finding
         Entity.g_map.construct(self.current_level.map)
-        self.current_level.spawn_entities(options)
+        if mode:
+            self.current_level.map_mode = mode
+        self.current_level.spawn_entities()
 
     def display_ui(self, clock):
         font = pygame.font.Font(None, 25)
@@ -88,8 +119,8 @@ class Game:
                     running = False
 
                 # POSÍLÁNÍ EVENTŮ DO DIALOGU
-                if self.current_level and self.current_level.dialog_ui.active:
-                    self.current_level.dialog_ui.handle_input(event)
+                if self.dialog_ui.active:
+                    self.dialog_ui.handle_event(event)
                 elif event.type == pygame.KEYDOWN:
                     if event.key == pygame.K_x:
                         self.debug_mode = not self.debug_mode
@@ -103,14 +134,16 @@ class Game:
             # Playing
             result = self.current_level.check_interactions()
             if result["type"] == "level_change":
-                level_options = result["options"]
+                level_mode = result["mode"]
                 self.switch_level(
-                    level_options["target_level"],
-                    level_options["spawn_pos"],
-                    level_options["options"],
+                    level_mode["target_level"],
+                    level_mode["spawn_pos"],
+                    level_mode["mode"],
                 )
             # deltaTime
-            dt = clock.tick(60) / 1000
+            raw_dt = clock.tick(60) / 1000
+            dt = min(raw_dt, 0.1)
+
             # update logic
             self.current_level.update(dt * self.game_speed)
             # draw

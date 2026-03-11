@@ -1,6 +1,7 @@
 import pygame
+import random
+
 from source.fsm.state import State
-from source.utils.sound_manager import SoundManager
 
 
 class Idle(State):
@@ -27,7 +28,6 @@ class Light_Attack(State):
         self.delete_hitbox = delete_hitbox
 
     def enter(self, entity):
-        # self.attack_start = pygame.time.get_ticks()
         entity.set_animation(speed=12, loop=False)
 
     def execute(self, entity):
@@ -38,11 +38,11 @@ class Light_Attack(State):
 
         if anim.on_frame(self.delete_hitbox):
             entity.attack_hitbox = None  # Deaktivace hitboxu
+            if not entity.hit_entities:
+                random.choice(entity.sound_effects["miss"]).play()
 
         if entity.current_animation.finished:
             entity.change_state(entity.states["IDLE"])
-            # self.attack_end = pygame.time.get_ticks()
-            # print(self.attack_end - self.attack_start, " ms")
 
     def exit(self, entity):
         entity.attack_hitbox = None
@@ -54,25 +54,22 @@ class Heavy_Attack(State):
         self.delete_hitbox = delete_hitbox_index
 
     def enter(self, entity):
-        # self.attack_start = pygame.time.get_ticks()
         entity.set_animation(speed=8, loop=False)
 
     def execute(self, entity):
         anim = entity.current_animation
 
         if anim.on_frame(self.create_hitbox):
-            # self.attack_end = pygame.time.get_ticks()
-            # print(self.attack_end - self.attack_start, " ms")
             entity.create_attack_hitbox()
             entity.set_animation(speed=12, loop=False, sync_with_current=True)
 
         if anim.on_frame(self.delete_hitbox):
             entity.attack_hitbox = None  # Deaktivace hitboxu
+            if not entity.hit_entities:
+                random.choice(entity.sound_effects["miss"]).play()
 
         if entity.current_animation.finished:
             entity.change_state(entity.states["IDLE"])
-            # self.attack_end = pygame.time.get_ticks()
-            # print(self.attack_end - self.attack_start, " ms")
 
     def exit(self, entity):
         entity.attack_hitbox = None
@@ -92,7 +89,7 @@ class Dodge(State):
 
         if anim.on_frame(self.become_invulnerable):
             entity.is_dodging = True
-            SoundManager.play_sound(entity.sound_effects["dodge"][0])
+            entity.sound_effects["dodge"][0].play()
 
         if anim.on_frame(self.stop_invulnerable):
             entity.is_dodging = False
@@ -123,8 +120,6 @@ class Block(State):
 
     def enter(self, entity):
         entity.set_animation(speed=10, loop=True, loop_start=2)
-        # entity.speed /=  2
-        # self.attack_start = pygame.time.get_ticks()
 
     def execute(self, entity):
         entity.regen_stamina()
@@ -133,18 +128,13 @@ class Block(State):
         if anim.on_frame(self.start_blocking):
             entity.is_blocking = True
             entity.is_parying = True
-            # self.attack_end = pygame.time.get_ticks()
-            # print(self.attack_end - self.attack_start, " ms")
 
         if anim.on_frame(self.start_blocking + 2):
             entity.is_parying = False
-            # self.attack_end = pygame.time.get_ticks()
-            # print(self.attack_end - self.attack_start, " ms")
 
         if anim.on_frame(self.stop_blocking):
             entity.is_blocking = False
 
     def exit(self, entity):
-        # entity.speed *= 2
         entity.is_blocking = False
         entity.is_parying = False

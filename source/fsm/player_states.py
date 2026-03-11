@@ -2,7 +2,6 @@ import pygame
 
 from source.fsm.state import State
 from source.fsm.general_states import Idle, Run, Block, Stun, Heavy_Attack
-from source.utils.sound_manager import SoundManager
 
 
 class Player_Idle(Idle):
@@ -119,7 +118,7 @@ class Player_Stun(Stun):
             player.stamina -= 4.0
             player.cooldowns["stun"] = 0
             player.cooldowns["imunity"] = 0.5
-            SoundManager.play_sound(player.sound_effects["break"][0])
+            player.sound_effects["break"][0].play()
             player.change_state(player.states["IDLE"])
 
 

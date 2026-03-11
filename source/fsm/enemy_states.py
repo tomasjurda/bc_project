@@ -1,6 +1,6 @@
 import pygame
 
-from source.utils.sound_manager import SoundManager
+from source.core.settings import SHARED_ACTION_MAP
 from source.fsm.state import State
 from source.fsm.general_states import (
     Idle,
@@ -12,28 +12,12 @@ from source.fsm.general_states import (
     Dodge,
 )
 
-ACTION_MAP = {
-    0: "IDLE",
-    1: "RUN",
-    2: "DODGE",
-    3: "BLOCK",
-    4: "LIGHT_ATTACK",
-    5: "HEAVY_ATTACK",
-    6: "FEINT",
-    7: "BREAK",
-}
-
 
 class Enemy_Idle(Idle):
     def handle_input(self, enemy):
         if enemy.cooldowns["reaction"] <= 0:
             action = enemy.decide_action()
-            fin_action = "IDLE"
-            if type(action) != str:
-                fin_action = ACTION_MAP[int(action)]
-            else:
-                fin_action = action
-
+            fin_action = SHARED_ACTION_MAP.get(int(action), "IDLE")
             if fin_action in ["RUN", "LIGHT_ATTACK", "HEAVY_ATTACK", "DODGE", "BLOCK"]:
                 enemy.change_state(enemy.states[fin_action])
 
@@ -55,11 +39,7 @@ class Basic_Enemy_Run(Run):
     def handle_input(self, enemy):
         if enemy.cooldowns["reaction"] <= 0:
             action = enemy.decide_action()
-            fin_action = "IDLE"
-            if type(action) != str:
-                fin_action = ACTION_MAP[int(action)]
-            else:
-                fin_action = action
+            fin_action = SHARED_ACTION_MAP.get(int(action), "IDLE")
 
             if fin_action == "RUN":
                 enemy.face_player()
@@ -107,11 +87,7 @@ class Enemy_Run(Run):
     def handle_input(self, enemy):
         if enemy.cooldowns["reaction"] <= 0:
             action = enemy.decide_action()
-            fin_action = "IDLE"
-            if type(action) != str:
-                fin_action = ACTION_MAP[int(action)]
-            else:
-                fin_action = action
+            fin_action = SHARED_ACTION_MAP.get(int(action), "IDLE")
 
             if fin_action == "RUN":
                 enemy_pos = pygame.Vector2(enemy.hitbox_rect.center)
@@ -187,11 +163,7 @@ class Enemy_Block(Block):
     def handle_input(self, enemy):
         if enemy.cooldowns["reaction"] <= 0:
             action = enemy.decide_action()
-            fin_action = "IDLE"
-            if type(action) != str:
-                fin_action = ACTION_MAP[int(action)]
-            else:
-                fin_action = action
+            fin_action = SHARED_ACTION_MAP.get(int(action), "IDLE")
 
             if fin_action == "BLOCK":
                 enemy.face_player()
@@ -211,17 +183,13 @@ class Enemy_Stun(Stun):
     def handle_input(self, enemy):
         if enemy.cooldowns["reaction"] <= 0:
             action = enemy.decide_action()
-            fin_action = "IDLE"
-            if type(action) != str:
-                fin_action = ACTION_MAP[int(action)]
-            else:
-                fin_action = action
+            fin_action = SHARED_ACTION_MAP.get(int(action), "IDLE")
 
             if fin_action == "BREAK" and enemy.stamina >= 4.0:
                 enemy.stamina -= 4.0
                 enemy.cooldowns["stun"] = 0
                 enemy.cooldowns["imunity"] = 0.5
-                SoundManager.play_sound(enemy.sound_effects["break"][0])
+                enemy.sound_effects["break"][0].play()
                 enemy.change_state(enemy.states["IDLE"])
 
 
@@ -231,13 +199,9 @@ class Enemy_Heavy_Attack(Heavy_Attack):
         super().enter(enemy)
 
     def handle_input(self, enemy):
-        if enemy.cooldowns["reaction"] <= 0 and enemy.attack_hitbox == None:
+        if enemy.cooldowns["reaction"] <= 0 and enemy.attack_hitbox is None:
             action = enemy.decide_action()
-            fin_action = "IDLE"
-            if type(action) != str:
-                fin_action = ACTION_MAP[int(action)]
-            else:
-                fin_action = action
+            fin_action = SHARED_ACTION_MAP.get(int(action), "IDLE")
 
             if fin_action == "FEINT":
                 enemy.change_state(enemy.states["IDLE"])

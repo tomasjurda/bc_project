@@ -1,15 +1,22 @@
+from os.path import join
+
 import gymnasium as gym
 import numpy as np
 import pygame
-from os.path import join
 
-
-from rl_enemy import RL_Enemy
 from source.core.settings import WINDOW_WIDTH, WINDOW_HEIGHT
+
 from source.fsm.enemy_states import Basic_Enemy_Run
+
 from source.entities.hostile_npc import HostileNPC
-from source.utils.combat_handler import CombatHandler
+
+from source.utils.combat_manager import CombatManager
+from source.utils.sprite_manager import SpriteManager
+from source.utils.data_manager import DataManager
+
 from source.sprites.sprite_group import AllSprites
+
+from source.rl.rl_enemy import RL_Enemy
 
 
 class RpgEnv(gym.Env):
@@ -22,7 +29,7 @@ class RpgEnv(gym.Env):
 
         # POZOROVÁNÍ: [dist, npc_hp, npc_stamina, npc_action, p_hp, p_stamina, p_action]
         self.observation_space = gym.spaces.Box(
-            low=0.0, high=1.0, shape=(19,), dtype=np.float32
+            low=0.0, high=1.0, shape=(23,), dtype=np.float32
         )
 
         pygame.init()
@@ -33,8 +40,22 @@ class RpgEnv(gym.Env):
         else:
             self.display_surface = pygame.display.set_mode((1, 1), pygame.NOFRAME)
 
+        SpriteManager.add_spritesheet(
+            "player_model", join("graphics", "models", "Player.png")
+        )
+        SpriteManager.add_spritesheet(
+            "enemy_model", join("graphics", "models", "Player_BLUE.png")
+        )
+        DataManager.load_all_data()
+
         self.clock = pygame.time.Clock()
-        self.combat_handler = CombatHandler()
+        self.combat_handler = CombatManager()
+        self.all_sprites = AllSprites()
+        self.collision_sprites = pygame.sprite.Group()
+        self.agent = None
+        self.opponent = None
+        self.last_agent_hp = None
+        self.last_opp_hp = None
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
@@ -45,7 +66,7 @@ class RpgEnv(gym.Env):
         self.agent = RL_Enemy(
             (200, 200),
             [self.all_sprites],
-            pygame.image.load(join("graphics", "models", "Player.png")),
+            SpriteManager.get_spritesheet("player_model"),
             self.collision_sprites,
             player=None,
         )
@@ -55,10 +76,10 @@ class RpgEnv(gym.Env):
         self.opponent = HostileNPC(
             (600, 400),
             [self.all_sprites],
-            pygame.image.load(join("graphics", "models", "Player_BLUE.png")),
+            SpriteManager.get_spritesheet("enemy_model"),
             self.collision_sprites,
             player=self.agent,
-            brain_type="Tree",
+            brain_type="TREE",
         )
 
         self.opponent.states["RUN"]["state"] = Basic_Enemy_Run()
@@ -111,7 +132,7 @@ class RpgEnv(gym.Env):
             pygame.event.pump()
 
             pygame.display.update()
-            self.clock.tick(10)
+            self.clock.tick(20)
 
         # 4. Výstup
         obs = np.array(self.agent.get_context_rl(), dtype=np.float32)
@@ -120,69 +141,68 @@ class RpgEnv(gym.Env):
         return obs, total_reward, terminated, truncated, info
 
     def _calculate_reward(self):
-        reward = 0
-        # reward -= 0.1
+        # 1. TACTICAL TIME PENALTY
+        reward = -0.01
 
         dist = pygame.Vector2(self.agent.hitbox_rect.center).distance_to(
             pygame.Vector2(self.opponent.hitbox_rect.center)
         )
+
         agent_state_name = self.agent.current_state_name
         opp_state_name = self.opponent.current_state_name
 
-        agent_stamina_pct = (self.agent.stamina / self.agent.max_stamina) * 100
+        MELEE_RANGE = 70
 
-        # 1. LOGIKA VZDÁLENOSTI
-        if dist > 80:
+        # 2. THE TRAVERSAL PHASE
+        if dist > MELEE_RANGE:
             if "RUN" in agent_state_name:
-                reward += 0.5
+                reward += 5.0
+            elif agent_state_name in [
+                "BLOCK",
+                "LIGHT_ATTACK",
+                "HEAVY_ATTACK",
+                "DODGE",
+                "FEINT",
+            ]:
+                reward -= 10.0
             else:
-                reward -= 1.0
-                if "ATTACK" in agent_state_name:
-                    reward -= 2.0
-        elif dist < 20:
-            reward -= 0.2
+                reward -= 2.0
+
+        # 3. THE COMBAT PHASE (Distance <= 70)
         else:
-            if "RUN" not in agent_state_name:
-                reward += 0.05
-            if "IDLE" in agent_state_name and agent_stamina_pct > 50:
-                reward -= 0.2
+            if agent_state_name == "BLOCK" and opp_state_name not in [
+                "LIGHT_ATTACK",
+                "HEAVY_ATTACK",
+            ]:
+                reward -= 0.05
 
-        # 2. LOGIKA STAMINY
-        if agent_stamina_pct < 20:
-            reward -= 0.1
-
-        # 3. LOGIKA ÚTOKU
+        # 4. HP DELTAS (The Ultimate Goal)
         dmg_dealt = self.last_opp_hp - self.opponent.hitpoints
         if dmg_dealt > 0:
-            reward += dmg_dealt * 2.0 + 5.0  # Úspěšný zásah
-        else:
-            if self.agent.attack_hitbox:
-                if self.agent.hit_entities:
-                    reward -= 0.2  # Útok do bloku
-                else:
-                    reward -= 1.0  # Máchání do vzduchu
+            reward += (dmg_dealt * 2.0) + 10.0  # Massive reward for landing a hit
 
-        # 4. LOGIKA OBRANY
         dmg_taken = self.last_agent_hp - self.agent.hitpoints
-
-        # Trest za obdržené poškození
         if dmg_taken > 0:
-            reward -= dmg_taken * 1.0
+            reward -= (dmg_taken * 2.0) + 5.0  # Massive penalty for getting hit
 
-        # Odměna za úspěšný blok/úhyb
-        if self.opponent.attack_hitbox and dmg_taken == 0 and dist < 90:
+        # Reward successfully dodging or blocking an INCOMING attack
+        if self.opponent.attack_hitbox and dmg_taken == 0 and dist <= MELEE_RANGE:
             if "BLOCK" in agent_state_name or "DODGE" in agent_state_name:
-                reward += 2.0
+                reward += 3.0
                 if self.agent.is_parying:
-                    reward += 5.0
+                    reward += 1.0
 
+        # Stun status
         if "STUN" in agent_state_name:
-            reward -= 0.2
-
+            reward -= 0.5
         if "STUN" in opp_state_name:
-            reward += 0.5
+            reward += 1.0
 
-        # Update uložených HP
+        # 5. STAMINA MANAGEMENT
+        if (self.agent.stamina / self.agent.max_stamina) < 0.1:
+            reward -= 0.05
+
+        # Update cached HP for the next step
         self.last_opp_hp = self.opponent.hitpoints
         self.last_agent_hp = self.agent.hitpoints
 

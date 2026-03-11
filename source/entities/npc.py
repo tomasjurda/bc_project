@@ -1,13 +1,9 @@
-from joblib import load
-from stable_baselines3 import PPO
-import numpy as np
-from os.path import join
-from copy import copy
-import pygame
 import random
 
+import numpy as np
+import pygame
+
 from source.fsm.fsm import FSM
-from source.entities.entity import Entity
 from source.fsm.enemy_states import (
     Enemy_Idle,
     Enemy_Run,
@@ -18,25 +14,18 @@ from source.fsm.enemy_states import (
     Enemy_Heavy_Attack,
     Enemy_Stun,
 )
-
-
-ACTION_MAP = {
-    "IDLE": 0,
-    "RUN": 1,
-    "DODGE": 2,
-    "BLOCK": 3,
-    "LIGHT_ATTACK": 4,
-    "HEAVY_ATTACK": 5,
-    "STUN": 6,
-}
+from source.entities.entity import Entity
+from source.utils.sound_manager import SoundManager
+from source.utils.data_manager import DataManager
+from source.core.settings import (
+    SHARED_STATE_MAP,
+    SHARED_ACTION_MAP_REVERSED,
+)
 
 
 class NPC(Entity):
-    mlp_brain = PPO.load(join("data", "rl_models", "ppo_rpg_agent.zip"))
-    tree_brain = load(join("data", "npc_brain_tree.joblib"))
-
     def __init__(
-        self, pos, groups, sprite_sheet, collisions, player, brain_type="BASIC"
+        self, pos, groups, sprite_sheet, collisions, player, brain_type="basic"
     ):
         super().__init__(pos, groups, sprite_sheet)
 
@@ -50,12 +39,7 @@ class NPC(Entity):
         self.path_to_player = []
         self.brain_type = brain_type
 
-        if brain_type == "TREE":
-            self.brain = copy(NPC.tree_brain)
-        elif brain_type == "RL_MLP":
-            self.brain = copy(NPC.mlp_brain)
-        else:
-            self.brain = None
+        self.brain = DataManager.get_brain(brain_type)
 
         self.fsm = FSM(self)
         # STATES AND ANIMATIONS
@@ -152,33 +136,33 @@ class NPC(Entity):
         # AUDIO
         self.sound_effects = {
             "hit": [
-                pygame.mixer.Sound(join("assets", "sword_hit_1.wav")),
-                pygame.mixer.Sound(join("assets", "sword_hit_2.wav")),
-                pygame.mixer.Sound(join("assets", "sword_hit_3.wav")),
+                SoundManager.get_sound("sword_hit_1"),
+                SoundManager.get_sound("sword_hit_2"),
+                SoundManager.get_sound("sword_hit_3"),
             ],
             "miss": [
-                pygame.mixer.Sound(join("assets", "sword_miss_1.wav")),
-                pygame.mixer.Sound(join("assets", "sword_miss_2.wav")),
-                pygame.mixer.Sound(join("assets", "sword_miss_3.wav")),
+                SoundManager.get_sound("sword_miss_1"),
+                SoundManager.get_sound("sword_miss_2"),
+                SoundManager.get_sound("sword_miss_3"),
             ],
             "damage": [
-                pygame.mixer.Sound(join("assets", "human_damage_1.wav")),
-                pygame.mixer.Sound(join("assets", "human_damage_2.wav")),
-                pygame.mixer.Sound(join("assets", "human_damage_3.wav")),
+                SoundManager.get_sound("human_damage_1"),
+                SoundManager.get_sound("human_damage_2"),
+                SoundManager.get_sound("human_damage_3"),
             ],
             "block": [
-                pygame.mixer.Sound(join("assets", "block_1.wav")),
-                pygame.mixer.Sound(join("assets", "block_2.wav")),
-                pygame.mixer.Sound(join("assets", "block_3.wav")),
+                SoundManager.get_sound("block_1"),
+                SoundManager.get_sound("block_2"),
+                SoundManager.get_sound("block_3"),
             ],
             "parry": [
-                pygame.mixer.Sound(join("assets", "parry.wav")),
-                pygame.mixer.Sound(join("assets", "parry_1.wav")),
-                pygame.mixer.Sound(join("assets", "parry_2.wav")),
-                pygame.mixer.Sound(join("assets", "parry_3.wav")),
+                SoundManager.get_sound("parry"),
+                SoundManager.get_sound("parry_1"),
+                SoundManager.get_sound("parry_2"),
+                SoundManager.get_sound("parry_3"),
             ],
-            "dodge": [pygame.mixer.Sound(join("assets", "dodge.wav"))],
-            "break": [pygame.mixer.Sound(join("assets", "break.wav"))],
+            "dodge": [SoundManager.get_sound("dodge")],
+            "break": [SoundManager.get_sound("break")],
         }
 
         self.change_state(self.states["IDLE"])
@@ -197,100 +181,45 @@ class NPC(Entity):
             self.direction = pygame.Vector2()
 
     def get_context_rl(self):
-        # dist	npc_hp_status	npc_stamina_status	npc_current_action	player_hp_status	player_stamina_status	player_action	new_action
-
-        # 1. distance
-        data = []
+        # 1. Distance
         dist = pygame.Vector2(self.rect.center).distance_to(
             pygame.Vector2(self.player.rect.center)
         )
-        data.append(min(dist + random.randint(-10, 10) / 400.0, 1.0))
+        normalized_dist = (dist + random.randint(-10, 10)) / 400.0
+        data = [min(max(normalized_dist, 0.0), 1.0)]
 
-        # 2. npc hp 0-1
+        # 2. HP & Stamina
         data.append(self.hitpoints / self.max_hitpoints)
-
-        # 3. npc stamina 0-1
         data.append(self.stamina / self.max_stamina)
 
-        # 4. NPC current action
-        idx = self._get_action_index(self)
-        my_action_one_hot = np.eye(7)[idx]
-        data.extend(my_action_one_hot)
+        # 3. NPC current action
+        idx = SHARED_STATE_MAP.get(self.current_state_name, 0)
+        data.extend(np.eye(9)[idx])
 
-        # 5. player hp
+        # 4. Player HP & Stamina
         data.append(self.player.hitpoints / self.player.max_hitpoints)
-
-        # 6. player stamina
         data.append(self.player.stamina / self.player.max_stamina)
 
-        # 7. player current action
-        idx_p = self._get_action_index(self.player)
-        opp_action_one_hot = np.eye(7)[idx_p]
-        data.extend(opp_action_one_hot)
+        # 5. Player current action
+        idx_p = SHARED_STATE_MAP.get(self.player.current_state_name, 0)
+        data.extend(np.eye(9)[idx_p])
 
-        # print(data)
         return data
 
-    def _get_action_index(self, entity):
-        idx = ACTION_MAP.get(entity.current_state_name, 0)
-        if idx >= 7:
-            idx = 0
-
-        return idx
-
     def get_context(self):
-        # dist	npc_hp_status	npc_stamina_status	npc_current_action	player_hp_status	player_stamina_status	player_action	new_action
-        # ACTION_MAP = {"IDLE": 0, "RUN": 1, "DODGE": 2, "BLOCK": 3, "LIGHT_ATTACK": 4, "HEAVY_ATTACK": 5, "STUN": 6}
-        # Mapování stavů HP {"CRITICAL": 0, "HURT": 1, "OK": 2}
-        # Mapování stavů Staminy {"TIRED": 0, "OK": 1}
-
-        # 1. distance
-        data = []
         dist = pygame.Vector2(self.rect.center).distance_to(
             pygame.Vector2(self.player.rect.center)
         )
-        data.append(int(dist) + random.randint(-10, 10))
-        # print(dist)
 
-        # 2. NPC hp
-        hp_per = self.hitpoints / self.max_hitpoints * 100
-        if hp_per < 20:
-            data.append(0)
-        elif hp_per < 50:
-            data.append(1)
-        else:
-            data.append(2)
-
-        # 3. NPC stamina
-        stam_per = self.stamina / self.max_stamina * 100
-        if stam_per < 30:
-            data.append(0)
-        else:
-            data.append(1)
-
-        # 4. NPC current action
-        data.append(ACTION_MAP.get(self.current_state_name, 0))
-
-        # 5. player hp
-        hp_pl_per = self.player.hitpoints / self.player.max_hitpoints * 100
-        if hp_pl_per < 20:
-            data.append(0)
-        elif hp_pl_per < 50:
-            data.append(1)
-        else:
-            data.append(2)
-
-        # 6. player stamina
-        stam_pl_per = self.player.stamina / self.player.max_stamina * 100
-        if stam_pl_per < 30:
-            data.append(0)
-        else:
-            data.append(1)
-
-        # 7. player current action
-        data.append(ACTION_MAP.get(self.player.current_state_name, 0))
-
-        return data
+        return [
+            int(dist) + random.randint(-10, 10),
+            self.hitpoints / self.max_hitpoints,
+            self.stamina / self.max_stamina,
+            SHARED_STATE_MAP.get(self.current_state_name, 0),
+            self.player.hitpoints / self.player.max_hitpoints,
+            self.player.stamina / self.player.max_stamina,
+            SHARED_STATE_MAP.get(self.player.current_state_name, 0),
+        ]
 
     def get_path(self):
         try:
@@ -299,9 +228,6 @@ class NPC(Entity):
             )
         except KeyError:
             self.path_to_player = None
-
-        # self.g_map.show_path(self.path_to_player)
-        # self.g_map.show_map()
 
     def respawn(self):
         super().respawn()
@@ -316,32 +242,27 @@ class NPC(Entity):
 
     def decide_action(self):
         if not self.hostile:
-            return "IDLE"
+            return SHARED_ACTION_MAP_REVERSED.get("IDLE")
 
-        self.cooldowns["reaction"] = random.triangular(0.2, 0.3, 0.25)
+        self.cooldowns["reaction"] = random.triangular(0.3, 0.45, 0.35)
         distance_to_player = pygame.Vector2(self.hitbox_rect.center).distance_to(
             pygame.Vector2(self.player.hitbox_rect.center)
         )
 
         if self.player.current_state_name != "DEATH" and distance_to_player <= 400:
-            if self.brain_type == "RL_MLP":
+            if self.brain_type == "rl_mlp":
                 ctx = self.get_context_rl()
                 prediction = self.brain.predict([ctx])[0][0]
-            elif self.brain_type == "TREE":
+            elif self.brain_type == "tree":
                 ctx = self.get_context()
                 prediction = self.brain.predict([ctx])[0]
             else:
+                # SIMPLE BRAIN
                 ctx = self.get_context()
-                if ctx[0] > 60:
-                    prediction = "RUN"
-                else:
-                    if ctx[2] == 1:
-                        prediction = "LIGHT_ATTACK"
-                    else:
-                        prediction = "IDLE"
+                prediction = self.brain.predict(ctx)
+            # print(SHARED_ACTION_MAP.get(prediction))
             return prediction
-        else:
-            return "IDLE"
+        return SHARED_ACTION_MAP_REVERSED.get("IDLE")
 
     def draw_ui(self, surface, offset, debug_mode):
         super().draw_ui(surface, offset, debug_mode)

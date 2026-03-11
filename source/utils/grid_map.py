@@ -92,7 +92,6 @@ class GridMap:
         def heuristic(a, b):
             # Euclidean distance on a square grid
             return math.hypot(a[0] - b[0], a[1] - b[1])
-            # return abs(a[0] - b[0]) + abs(a[1] - b[1])
 
         # x = col , y = row
         grid_start_x = int(start_cords[0] / self.scaled_tile_size)
@@ -152,7 +151,7 @@ class GridMap:
 
         return smoothed_path
 
-    def _has_line_of_sight(self, p1, p2):
+    def has_line_of_sight(self, p1, p2):
         # Convert pixel coordinates back to grid coordinates (col, row)
         x1 = int(p1[0] / self.scaled_tile_size)
         y1 = int(p1[1] / self.scaled_tile_size)
@@ -197,7 +196,7 @@ class GridMap:
 
             # Checking furthest path node in line of sight
             for i in range(len(path) - 1, current_index, -1):
-                if self._has_line_of_sight(path[current_index], path[i]):
+                if self.has_line_of_sight(path[current_index], path[i]):
                     furthest_visible_index = i
                     break
 

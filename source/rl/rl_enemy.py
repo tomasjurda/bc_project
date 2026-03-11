@@ -24,6 +24,6 @@ class RL_Enemy(NPC):
 
         if new_action != self.current_action:
             self.current_action = new_action
-            self.cooldowns["reaction"] = random.triangular(0.2, 0.25, 0.22)
+            self.cooldowns["reaction"] = random.triangular(0.3, 0.45, 0.35)
 
         return self.current_action

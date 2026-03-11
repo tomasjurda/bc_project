@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="22">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="16" height="16" tilewidth="64" tileheight="64" infinite="0" nextlayerid="8" nextobjectid="30">
  <tileset firstgid="1" source="../graphics/tilesets_64x64/TX Tileset Grass_64.tsx"/>
  <tileset firstgid="65" source="../graphics/tilesets_64x64/TX Tileset Wall_64.tsx"/>
  <tileset firstgid="321" source="../graphics/tilesets_64x64/TX Struct_64.tsx"/>
@@ -46,7 +46,14 @@
 130,131,132,0,0,0,121,0,0,117,0,0,0,130,131,132
 </data>
  </layer>
- <objectgroup id="4" name="Objects"/>
+ <objectgroup id="4" name="Objects">
+  <object id="22" gid="672" x="401" y="894.333" width="44" height="76"/>
+  <object id="23" gid="672" x="578.667" y="894.333" width="44" height="76"/>
+  <object id="24" gid="675" x="579" y="1019.67" width="42" height="68"/>
+  <object id="25" gid="675" x="402.333" y="1021" width="42" height="68"/>
+  <object id="26" gid="675" x="403" y="957.667" width="42" height="68"/>
+  <object id="27" gid="675" x="580.667" y="956" width="42" height="68"/>
+ </objectgroup>
  <objectgroup color="#ff0000" id="5" name="InteractObjects">
   <object id="18" name="door_crossroad" type="invisible_door" gid="655" x="470.5" y="1025" width="82" height="100"/>
  </objectgroup>
@@ -54,7 +61,7 @@
   <object id="1" name="blacksmith_grom" type="npc_spawn" x="710" y="319.333">
    <point/>
   </object>
-  <object id="2" name="random_guard" type="npc_spawn" x="613.333" y="802">
+  <object id="2" name="guard_thomas" type="npc_spawn" x="576.333" y="769">
    <point/>
   </object>
   <object id="3" name="merchant_silas" type="npc_spawn" x="262.667" y="317.333">
@@ -73,5 +80,6 @@
   <object id="13" x="4" y="256" width="58" height="511"/>
   <object id="19" x="385.333" y="833.333" width="54.6667" height="188.667"/>
   <object id="20" x="583.333" y="832.667" width="56" height="190.667"/>
+  <object id="29" x="449.333" y="966.083" width="125.083" height="56.1667"/>
  </objectgroup>
 </map>

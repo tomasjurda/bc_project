@@ -1,5 +1,4 @@
 import pygame
-from os.path import join
 
 
 from source.fsm.general_states import Dodge, Light_Attack
@@ -13,7 +12,9 @@ from source.fsm.player_states import (
     Player_Stun,
 )
 from source.fsm.fsm import FSM
+
 from source.entities.entity import Entity
+from source.utils.sound_manager import SoundManager
 
 
 class Player(Entity):
@@ -134,33 +135,33 @@ class Player(Entity):
         # AUDIO
         self.sound_effects = {
             "hit": [
-                pygame.mixer.Sound(join("assets", "sword_hit_1.wav")),
-                pygame.mixer.Sound(join("assets", "sword_hit_2.wav")),
-                pygame.mixer.Sound(join("assets", "sword_hit_3.wav")),
+                SoundManager.get_sound("sword_hit_1"),
+                SoundManager.get_sound("sword_hit_2"),
+                SoundManager.get_sound("sword_hit_3"),
             ],
             "miss": [
-                pygame.mixer.Sound(join("assets", "sword_miss_1.wav")),
-                pygame.mixer.Sound(join("assets", "sword_miss_2.wav")),
-                pygame.mixer.Sound(join("assets", "sword_miss_3.wav")),
+                SoundManager.get_sound("sword_miss_1"),
+                SoundManager.get_sound("sword_miss_2"),
+                SoundManager.get_sound("sword_miss_3"),
             ],
             "damage": [
-                pygame.mixer.Sound(join("assets", "human_damage_1.wav")),
-                pygame.mixer.Sound(join("assets", "human_damage_2.wav")),
-                pygame.mixer.Sound(join("assets", "human_damage_3.wav")),
+                SoundManager.get_sound("human_damage_1"),
+                SoundManager.get_sound("human_damage_2"),
+                SoundManager.get_sound("human_damage_3"),
             ],
             "block": [
-                pygame.mixer.Sound(join("assets", "block_1.wav")),
-                pygame.mixer.Sound(join("assets", "block_2.wav")),
-                pygame.mixer.Sound(join("assets", "block_3.wav")),
+                SoundManager.get_sound("block_1"),
+                SoundManager.get_sound("block_2"),
+                SoundManager.get_sound("block_3"),
             ],
             "parry": [
-                pygame.mixer.Sound(join("assets", "parry.wav")),
-                pygame.mixer.Sound(join("assets", "parry_1.wav")),
-                pygame.mixer.Sound(join("assets", "parry_2.wav")),
-                pygame.mixer.Sound(join("assets", "parry_3.wav")),
+                SoundManager.get_sound("parry"),
+                SoundManager.get_sound("parry_1"),
+                SoundManager.get_sound("parry_2"),
+                SoundManager.get_sound("parry_3"),
             ],
-            "dodge": [pygame.mixer.Sound(join("assets", "dodge.wav"))],
-            "break": [pygame.mixer.Sound(join("assets", "break.wav"))],
+            "dodge": [SoundManager.get_sound("dodge")],
+            "break": [SoundManager.get_sound("break")],
         }
 
         self.change_state(self.states["IDLE"])

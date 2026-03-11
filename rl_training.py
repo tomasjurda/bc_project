@@ -1,9 +1,10 @@
 import os
 import pygame
 from stable_baselines3 import PPO
+from stable_baselines3.common.callbacks import CheckpointCallback
 
 
-from rpg_env import RpgEnv
+from source.rl.rpg_env import RpgEnv
 from source.utils.sound_manager import SoundManager
 
 # Cesta pro ukládání modelů
@@ -21,9 +22,14 @@ if not os.path.exists(log_dir):
 def train():
     print("--- TRÉNINK ---")
     # 1. Prostředí (Headless)
-    SoundManager.volume = 0.0
+    SoundManager.init(enable_audio=False)
+    SoundManager.load_all_sounds()
 
     env = RpgEnv(render_mode=None)
+
+    checkpoint_callback = CheckpointCallback(
+        save_freq=100000, save_path=models_dir, name_prefix="ppo_rpg_checkpoint"
+    )
 
     # 2. Načtení nebo Vytvoření modelu
     if os.path.exists(model_path):
@@ -34,16 +40,32 @@ def train():
         reset_timesteps = False
     else:
         print("Model nenalezen, vytvářím nový...")
-        model = PPO("MlpPolicy", env, verbose=1, tensorboard_log=log_dir, ent_coef=0.01)
+        model = PPO(
+            "MlpPolicy",
+            env,
+            verbose=1,
+            tensorboard_log=log_dir,
+            ent_coef=0.01,
+            learning_rate=0.0003,
+            n_steps=2048,
+            batch_size=64,
+        )
         reset_timesteps = True
 
-    # 3. Trénink
-    TIMESTEPS = 100000
-    model.learn(total_timesteps=TIMESTEPS, reset_num_timesteps=reset_timesteps)
+    # Trénink
+    print("Starting training. This may take a few hours. Press CTRL+C to stop safely.")
+    try:
+        model.learn(
+            total_timesteps=20_000,
+            reset_num_timesteps=reset_timesteps,
+            callback=checkpoint_callback,
+        )
+    except KeyboardInterrupt:
+        print("\nTrénink přerušen uživatelem. Ukládám současný stav...")
 
-    # 4. Uložení
-    model.save(f"{models_dir}/{model_name}")
-    print(f"Model uložen.")
+    # Uložení
+    model.save(model_path)
+    print("Model uložen.")
 
 
 def watch():
@@ -55,6 +77,10 @@ def watch():
 
     env = RpgEnv(render_mode="human")
     model = PPO.load(model_path)
+
+    SoundManager.init(enable_audio=True)
+    SoundManager.load_all_sounds()
+    SoundManager.set_master_volume(0.4)
 
     obs, _ = env.reset()
     running = True
@@ -77,8 +103,6 @@ def watch():
         print(
             f"reaction: {env.agent.cooldowns["reaction"]:.2f}, action: {env.agent.current_action}, reward: {reward:.2f}"
         )
-        # if abs(reward) > 0:
-        #    print(reward)
 
         if terminated or truncated:
             obs, _ = env.reset()
