@@ -119,7 +119,7 @@ class DataManager:
             if cls._mlp_brain is None:
                 print("Loading PyTorch RL Model...")
                 cls._mlp_brain = PPO.load(
-                    join("data", "rl_models", "ppo_rpg_agent.zip")
+                    join("data", "rl_models", "ppo_rpg_agent.zip"), device="cpu"
                 )
             return cls._mlp_brain
 

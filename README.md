@@ -34,7 +34,7 @@ ollama pull qwen2.5:3b
 
 (Ensure the Ollama background service is running before starting the game).
 
-### Step 2: Setup the Python Environment3
+### Step 2: Setup the Python Environment
 Navigate to the project directory and set up a virtual environment:
 
 On Windows:
@@ -51,7 +51,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-### Step 3: Launch the Gam
+### Step 3: Launch the Game
 To play the main game:
 ```bash
 python main.py

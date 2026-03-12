@@ -50,7 +50,7 @@ def train() -> None:
         print("Continuing the training...")
 
         # Load existing model and attach the environment and logger
-        model = PPO.load(model_path, env=env, tensorboard_log=log_dir)
+        model = PPO.load(model_path, env=env, tensorboard_log=log_dir, device="cpu")
         reset_timesteps = False
     else:
         print("Model not found, creating new...")
@@ -64,6 +64,7 @@ def train() -> None:
             learning_rate=0.0003,
             n_steps=2048,
             batch_size=64,
+            device="cpu",
         )
         reset_timesteps = True
 
@@ -71,7 +72,7 @@ def train() -> None:
     print("Starting training. This may take a few hours. Press CTRL+C to stop safely.")
     try:
         model.learn(
-            total_timesteps=20_000,
+            total_timesteps=10_000,
             reset_num_timesteps=reset_timesteps,
             callback=checkpoint_callback,
         )
@@ -101,7 +102,7 @@ def watch():
 
     # Render mode is set to human to display the Pygame window
     env = RpgEnv(render_mode="human")
-    model = PPO.load(model_path)
+    model = PPO.load(model_path, device="cpu")
 
     obs, _ = env.reset()
     running = True

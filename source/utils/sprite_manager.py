@@ -51,16 +51,16 @@ class SpriteManager:
         This is called once during the initial Game setup.
         """
         SpriteManager.add_spritesheet(
-            "player", join("graphics", "models", "player.png")
+            "player", join("graphics", "models", "player_model.png")
         )
         SpriteManager.add_spritesheet(
             "basic_npc", join("graphics", "models", "basic_npc.png")
         )
         SpriteManager.add_spritesheet(
-            "tree", join("graphics", "models", "tree_model.png")
+            "tree", join("graphics", "models", "tree_model_npc.png")
         )
         SpriteManager.add_spritesheet(
-            "rl_mlp", join("graphics", "models", "rl_model.png")
+            "rl_mlp", join("graphics", "models", "rl_model_npc.png")
         )
         SpriteManager.add_spritesheet(
             "guard_thomas", join("graphics", "models", "guard_thomas.png")
