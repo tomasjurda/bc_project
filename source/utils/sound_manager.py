@@ -1,30 +1,44 @@
-"""Module responsible for playing sound effects"""
+"""Module responsible for managing, caching, and playing sound effects."""
 
 from os.path import join
 import pygame
 
 
 class DummySound:
-    """A fake sound object that silently catches and ignores audio calls during RL."""
+    """
+    A fake sound object that silently catches and ignores audio calls.
+    Used during headless Reinforcement Learning training or when audio is disabled
+    to prevent game crashes when entities try to play() missing sounds.
+    """
 
     def play(self):
-        pass
+        """Silently ignores the play request."""
 
-    def set_volume(self, volume):
-        pass
+    def set_volume(self, volume: float):
+        """Silently ignores the volume adjustment request."""
 
     def stop(self):
-        pass
+        """Silently ignores the stop request."""
 
 
 class SoundManager:
+    """
+    A static manager class for loading, caching, and globally controlling audio.
+    """
+
     _sounds = {}
     _enabled = True
     _master_volume = 1.0
 
     @classmethod
-    def init(cls, enable_audio=True):
-        """Initializes the audio system. Pass False to disable entirely."""
+    def init(cls, enable_audio: bool = True) -> None:
+        """
+        Initializes the audio system. Pass False to disable entirely.
+
+        Args:
+            enable_audio (bool): If True, initializes the pygame mixer. If False,
+                audio is completely skipped (useful for headless RL training).
+        """
         cls._enabled = enable_audio
         if cls._enabled:
             if not pygame.mixer.get_init():
@@ -32,7 +46,10 @@ class SoundManager:
 
     @classmethod
     def load_all_sounds(cls):
-        """Loads all game audio into RAM. Skips loading if audio is disabled."""
+        """
+        Loads all game audio into RAM from the disk.
+        Skips loading if audio is disabled.
+        """
         if not cls._enabled:
             return
 
@@ -57,6 +74,7 @@ class SoundManager:
             "break": "break.wav",
         }
 
+        # Iterate through the dictionary and attempt to load each sound file
         for name, filename in sound_files.items():
             path = join("assets", filename)
             try:
@@ -65,21 +83,36 @@ class SoundManager:
                 print(f"Warning: Sound {filename} not found.")
 
     @classmethod
-    def get_sound(cls, name):
-        """Returns the sound object, or a dummy if audio is disabled/missing."""
+    def get_sound(cls, name: str) -> pygame.mixer.Sound | DummySound:
+        """
+        Returns the sound object by its name key.
+        Returns a DummySound if audio is disabled or if the file was not found.
+
+        Args:
+            name (str): The string identifier key for the sound.
+
+        Returns:
+            pygame.mixer.Sound | DummySound: The requested sound or a safe dummy.
+        """
         if not cls._enabled:
             return DummySound()
 
         return cls._sounds.get(name, DummySound())
 
     @classmethod
-    def set_master_volume(cls, volume):
-        """Sets the global volume. 'volume' must be between 0.0 and 1.0"""
-        cls._master_volume = max(0.0, min(1.0, float(volume)))
+    def set_master_volume(cls, volume: float) -> None:
+        """
+        Sets the global master volume for all currently loaded sounds.
+
+        Args:
+            volume (float): The desired volume level (clamped between 0.0 and 1.0).
+        """
+
+        cls._master_volume = pygame.math.clamp(volume, 0.0, 1.0)
 
         if not cls._enabled:
             return
 
-        # Instantly update all currently loaded sounds
+        # Instantly apply the updated volume to all cached sounds
         for sound in cls._sounds.values():
             sound.set_volume(cls._master_volume)

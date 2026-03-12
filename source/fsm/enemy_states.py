@@ -1,3 +1,9 @@
+"""
+Module containing the Finite State Machine (FSM) behavior states specific to NPCs and Enemies.
+These states hook into the AI decision-making brains (Rule-based, Tree, RL)
+instead of listening to keyboard/mouse inputs.
+"""
+
 import pygame
 
 from source.core.settings import SHARED_ACTION_MAP
@@ -14,45 +20,54 @@ from source.fsm.general_states import (
 
 
 class Enemy_Idle(Idle):
-    def handle_input(self, enemy):
-        if enemy.cooldowns["reaction"] <= 0:
-            action = enemy.decide_action()
+    """
+    NPC-specific Idle state. Queries the assigned AI brain for the next action.
+    """
+
+    def handle_input(self, entity) -> None:
+        if entity.cooldowns["reaction"] <= 0:
+            action = entity.decide_action()
             fin_action = SHARED_ACTION_MAP.get(int(action), "IDLE")
             if fin_action in ["RUN", "LIGHT_ATTACK", "HEAVY_ATTACK", "DODGE", "BLOCK"]:
-                enemy.change_state(enemy.states[fin_action])
+                entity.change_state(entity.states[fin_action])
 
 
 class Basic_Enemy_Run(Run):
-    def enter(self, enemy):
-        enemy.face_player()
-        enemy_pos = pygame.Vector2(enemy.hitbox_rect.center)
-        player_pos = pygame.Vector2(enemy.player.hitbox_rect.center)
-        dist = enemy_pos.distance_to(player_pos)
-        if dist < 30:
-            enemy.direction = enemy_pos - player_pos
-            if enemy.direction.length_squared() > 0:
-                enemy.direction.normalize_ip()
-            else:
-                enemy.direction = pygame.Vector2(-1, 0)
-        super().enter(enemy)
+    """
+    Simplified run state for basic enemies. They simply run directly
+    at the player without utilizing A* pathfinding.
+    """
 
-    def handle_input(self, enemy):
-        if enemy.cooldowns["reaction"] <= 0:
-            action = enemy.decide_action()
+    def enter(self, entity) -> None:
+        entity.face_player()
+        entity_pos = pygame.Vector2(entity.hitbox_rect.center)
+        player_pos = pygame.Vector2(entity.player.hitbox_rect.center)
+        dist = entity_pos.distance_to(player_pos)
+        if dist < 30:
+            entity.direction = entity_pos - player_pos
+            if entity.direction.length_squared() > 0:
+                entity.direction.normalize_ip()
+            else:
+                entity.direction = pygame.Vector2(-1, 0)
+        super().enter(entity)
+
+    def handle_input(self, entity) -> None:
+        if entity.cooldowns["reaction"] <= 0:
+            action = entity.decide_action()
             fin_action = SHARED_ACTION_MAP.get(int(action), "IDLE")
 
             if fin_action == "RUN":
-                enemy.face_player()
-                enemy_pos = pygame.Vector2(enemy.hitbox_rect.center)
-                player_pos = pygame.Vector2(enemy.player.hitbox_rect.center)
-                dist = enemy_pos.distance_to(player_pos)
+                entity.face_player()
+                entity_pos = pygame.Vector2(entity.hitbox_rect.center)
+                player_pos = pygame.Vector2(entity.player.hitbox_rect.center)
+                dist = entity_pos.distance_to(player_pos)
                 if dist < 30:
-                    enemy.direction = enemy_pos - player_pos
-                    if enemy.direction.length_squared() > 0:
-                        enemy.direction.normalize_ip()
+                    entity.direction = entity_pos - player_pos
+                    if entity.direction.length_squared() > 0:
+                        entity.direction.normalize_ip()
                     else:
-                        enemy.direction = pygame.Vector2(-1, 0)
-                enemy.set_animation(loop_start=2, sync_with_current=True)
+                        entity.direction = pygame.Vector2(-1, 0)
+                entity.set_animation(loop_start=2, sync_with_current=True)
 
             elif fin_action in [
                 "IDLE",
@@ -61,54 +76,59 @@ class Basic_Enemy_Run(Run):
                 "DODGE",
                 "BLOCK",
             ]:
-                enemy.change_state(enemy.states[fin_action])
+                entity.change_state(entity.states[fin_action])
 
 
 class Enemy_Run(Run):
-    def enter(self, enemy):
-        enemy_pos = pygame.Vector2(enemy.hitbox_rect.center)
-        player_pos = pygame.Vector2(enemy.player.hitbox_rect.center)
-        dist = enemy_pos.distance_to(player_pos)
-        if dist < 30:
-            enemy.direction = enemy_pos - player_pos
-            if enemy.direction.length_squared() > 0:
-                enemy.direction.normalize_ip()
-            else:
-                enemy.direction = pygame.Vector2(-1, 0)
-        else:
-            enemy.get_path()
-            if enemy.path_to_player:
-                enemy.current_target = pygame.Vector2(enemy.path_to_player.pop(0))
-            else:
-                enemy.change_state(enemy.states["IDLE"])
-                return
-        super().enter(enemy)
+    """
+    Advanced run state for smart enemies (Decision Tree / RL).
+    Utilizes A* pathfinding nodes to navigate around walls towards the player.
+    """
 
-    def handle_input(self, enemy):
-        if enemy.cooldowns["reaction"] <= 0:
-            action = enemy.decide_action()
+    def enter(self, entity) -> None:
+        entity_pos = pygame.Vector2(entity.hitbox_rect.center)
+        player_pos = pygame.Vector2(entity.player.hitbox_rect.center)
+        dist = entity_pos.distance_to(player_pos)
+        if dist < 30:
+            entity.direction = entity_pos - player_pos
+            if entity.direction.length_squared() > 0:
+                entity.direction.normalize_ip()
+            else:
+                entity.direction = pygame.Vector2(-1, 0)
+        else:
+            entity.get_path()
+            if entity.path_to_player:
+                entity.current_target = pygame.Vector2(entity.path_to_player.pop(0))
+            else:
+                entity.change_state(entity.states["IDLE"])
+                return
+        super().enter(entity)
+
+    def handle_input(self, entity) -> None:
+        if entity.cooldowns["reaction"] <= 0:
+            action = entity.decide_action()
             fin_action = SHARED_ACTION_MAP.get(int(action), "IDLE")
 
             if fin_action == "RUN":
-                enemy_pos = pygame.Vector2(enemy.hitbox_rect.center)
-                player_pos = pygame.Vector2(enemy.player.hitbox_rect.center)
-                dist = enemy_pos.distance_to(player_pos)
+                entity_pos = pygame.Vector2(entity.hitbox_rect.center)
+                player_pos = pygame.Vector2(entity.player.hitbox_rect.center)
+                dist = entity_pos.distance_to(player_pos)
                 if dist < 30:
-                    enemy.direction = enemy_pos - player_pos
-                    if enemy.direction.length_squared() > 0:
-                        enemy.direction.normalize_ip()
+                    entity.direction = entity_pos - player_pos
+                    if entity.direction.length_squared() > 0:
+                        entity.direction.normalize_ip()
                     else:
-                        enemy.direction = pygame.Vector2(-1, 0)
+                        entity.direction = pygame.Vector2(-1, 0)
                 else:
-                    enemy.get_path()
-                    if enemy.path_to_player:
-                        enemy.current_target = pygame.Vector2(
-                            enemy.path_to_player.pop(0)
+                    entity.get_path()
+                    if entity.path_to_player:
+                        entity.current_target = pygame.Vector2(
+                            entity.path_to_player.pop(0)
                         )
                     else:
-                        enemy.change_state(enemy.states["IDLE"])
+                        entity.change_state(entity.states["IDLE"])
                         return
-                enemy.set_animation(loop_start=2, sync_with_current=True)
+                entity.set_animation(loop_start=2, sync_with_current=True)
             elif fin_action in [
                 "IDLE",
                 "LIGHT_ATTACK",
@@ -116,99 +136,125 @@ class Enemy_Run(Run):
                 "DODGE",
                 "BLOCK",
             ]:
-                enemy.change_state(enemy.states[fin_action])
+                entity.change_state(entity.states[fin_action])
 
-    def execute(self, enemy):
-        old_direction_state = enemy.direction_state
-        enemy_pos = pygame.Vector2(enemy.rect.center)
-        if enemy.current_target:
-            dist = enemy.current_target.distance_to(enemy_pos)
+    def execute(self, entity) -> None:
+        old_direction_state = entity.direction_state
+        entity_pos = pygame.Vector2(entity.rect.center)
+        if entity.current_target:
+            dist = entity.current_target.distance_to(entity_pos)
             if dist <= 10:
-                if enemy.path_to_player:
-                    enemy.current_target = pygame.Vector2(enemy.path_to_player.pop(0))
+                if entity.path_to_player:
+                    entity.current_target = pygame.Vector2(entity.path_to_player.pop(0))
                 else:
-                    enemy.change_state(enemy.states["IDLE"])
+                    entity.change_state(entity.states["IDLE"])
                     return
-            enemy.direction = enemy.current_target - enemy_pos
-            if enemy.direction.length_squared() > 0:
-                enemy.direction.normalize_ip()
-                enemy.update_direction()
-                if enemy.direction_state != old_direction_state:
-                    enemy.set_animation(loop_start=2, sync_with_current=True)
+            entity.direction = entity.current_target - entity_pos
+            if entity.direction.length_squared() > 0:
+                entity.direction.normalize_ip()
+                entity.update_direction()
+                if entity.direction_state != old_direction_state:
+                    entity.set_animation(loop_start=2, sync_with_current=True)
             else:
-                enemy.change_state(enemy.states["IDLE"])
+                entity.change_state(entity.states["IDLE"])
         else:
-            enemy.change_state(enemy.states["IDLE"])
-        super().execute(enemy)
+            entity.change_state(entity.states["IDLE"])
+        super().execute(entity)
 
 
 class Enemy_Death(State):
-    def enter(self, enemy):
-        enemy.set_animation(speed=6, loop=False)
+    """
+    NPC-specific Death state. Disables logic and respawns the enemy for training/testing.
+    """
 
-    def execute(self, enemy):
-        if enemy.current_animation.finished:
-            enemy.change_state(enemy.states["IDLE"])
+    def enter(self, entity) -> None:
+        entity.set_animation(speed=6, loop=False)
 
-    def exit(self, enemy):
-        # enemy.kill()
-        enemy.respawn()
+    def execute(self, entity) -> None:
+        if entity.current_animation.finished:
+            entity.change_state(entity.states["IDLE"])
+
+    def exit(self, entity) -> None:
+        # entity.kill()
+        entity.respawn()
 
 
 class Enemy_Block(Block):
-    def enter(self, enemy):
-        enemy.face_player()
-        super().enter(enemy)
+    """
+    NPC-specific block state. Forces the NPC to face the player while blocking.
+    """
 
-    def handle_input(self, enemy):
-        if enemy.cooldowns["reaction"] <= 0:
-            action = enemy.decide_action()
+    def enter(self, entity) -> None:
+        entity.face_player()
+        super().enter(entity)
+
+    def handle_input(self, entity) -> None:
+        if entity.cooldowns["reaction"] <= 0:
+            action = entity.decide_action()
             fin_action = SHARED_ACTION_MAP.get(int(action), "IDLE")
 
             if fin_action == "BLOCK":
-                enemy.face_player()
-                enemy.set_animation(loop_start=2, sync_with_current=True)
+                entity.face_player()
+                entity.set_animation(loop_start=2, sync_with_current=True)
 
             elif fin_action in ["IDLE", "RUN", "LIGHT_ATTACK", "HEAVY_ATTACK", "DODGE"]:
-                enemy.change_state(enemy.states[fin_action])
+                entity.change_state(entity.states[fin_action])
 
 
 class Enemy_Light_Attack(Light_Attack):
-    def enter(self, enemy):
-        enemy.face_player()
-        super().enter(enemy)
+    """
+    NPC-specific Light Attack state. Snaps facing direction to the player before swinging.
+    """
+
+    def enter(self, entity) -> None:
+        entity.face_player()
+        super().enter(entity)
 
 
 class Enemy_Stun(Stun):
-    def handle_input(self, enemy):
-        if enemy.cooldowns["reaction"] <= 0:
-            action = enemy.decide_action()
+    """
+    NPC-specific Stun state. Allows smart AI models (like RL) to execute a
+    stamina-draining 'Break' action to escape stun locks early.
+    """
+
+    def handle_input(self, entity) -> None:
+        if entity.cooldowns["reaction"] <= 0:
+            action = entity.decide_action()
             fin_action = SHARED_ACTION_MAP.get(int(action), "IDLE")
 
-            if fin_action == "BREAK" and enemy.stamina >= 4.0:
-                enemy.stamina -= 4.0
-                enemy.cooldowns["stun"] = 0
-                enemy.cooldowns["imunity"] = 0.5
-                enemy.sound_effects["break"][0].play()
-                enemy.change_state(enemy.states["IDLE"])
+            if fin_action == "BREAK" and entity.stamina >= 4.0:
+                entity.stamina -= 4.0
+                entity.cooldowns["stun"] = 0
+                entity.cooldowns["imunity"] = 0.5
+                entity.sound_effects["break"][0].play()
+                entity.change_state(entity.states["IDLE"])
 
 
 class Enemy_Heavy_Attack(Heavy_Attack):
-    def enter(self, enemy):
-        enemy.face_player()
-        super().enter(enemy)
+    """
+    NPC-specific Heavy Attack. Allows smart AI models to 'Feint' the attack
+    during windup to bait the player into an early parry.
+    """
 
-    def handle_input(self, enemy):
-        if enemy.cooldowns["reaction"] <= 0 and enemy.attack_hitbox is None:
-            action = enemy.decide_action()
+    def enter(self, entity) -> None:
+        entity.face_player()
+        super().enter(entity)
+
+    def handle_input(self, entity) -> None:
+        if entity.cooldowns["reaction"] <= 0 and entity.attack_hitbox is None:
+            action = entity.decide_action()
             fin_action = SHARED_ACTION_MAP.get(int(action), "IDLE")
 
             if fin_action == "FEINT":
-                enemy.change_state(enemy.states["IDLE"])
-                enemy.stamina += 2.0
+                entity.change_state(entity.states["IDLE"])
+                entity.stamina += 2.0
 
 
 class Enemy_Dodge(Dodge):
-    def enter(self, enemy):
-        enemy.face_player()
-        super().enter(enemy)
+    """
+    NPC-specific Dodge state. Snaps facing direction before rolling.
+    """
+
+    def enter(self, entity) -> None:
+        entity.face_player()
+        super().enter(entity)

@@ -1,3 +1,8 @@
+"""
+Module containing the Finite State Machine (FSM) behavior states specific to the Player.
+Handles keyboard/mouse inputs and transitions between combat/movement states.
+"""
+
 import pygame
 
 from source.fsm.state import State
@@ -5,132 +10,166 @@ from source.fsm.general_states import Idle, Run, Block, Stun, Heavy_Attack
 
 
 class Player_Idle(Idle):
-    def handle_input(self, player):
+    """
+    Player-specific Idle state. Listens for input to initiate movement or combat.
+    """
+
+    def handle_input(self, entity) -> None:
         keys = pygame.key.get_pressed()
         pressed_keys = pygame.key.get_just_pressed()
         mouse = pygame.mouse.get_pressed()
         if mouse[pygame.BUTTON_LEFT - 1]:
-            player.change_state(player.states["LIGHT_ATTACK"])
+            entity.change_state(entity.states["LIGHT_ATTACK"])
 
         elif mouse[pygame.BUTTON_RIGHT - 1]:
-            player.change_state(player.states["HEAVY_ATTACK"])
+            entity.change_state(entity.states["HEAVY_ATTACK"])
 
         elif pressed_keys[pygame.K_r]:
-            player.change_state(player.states["BLOCK"])
+            entity.change_state(entity.states["BLOCK"])
 
         elif pressed_keys[pygame.K_SPACE]:
-            player.change_state(player.states["DODGE"])
+            entity.change_state(entity.states["DODGE"])
 
         elif pressed_keys[pygame.K_e]:
-            player.interacting = True
+            entity.interacting = True
 
         elif (
             keys[pygame.K_s] or keys[pygame.K_a] or keys[pygame.K_d] or keys[pygame.K_w]
         ):
-            player.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
-            player.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
-            if player.direction.length_squared() > 0:
-                player.direction.normalize_ip()
-                player.update_direction()
-                player.change_state(player.states["RUN"])
+            entity.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
+            entity.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
+            if entity.direction.length_squared() > 0:
+                entity.direction.normalize_ip()
+                entity.update_direction()
+                entity.change_state(entity.states["RUN"])
             else:
-                player.change_state(player.states["IDLE"])
+                entity.change_state(entity.states["IDLE"])
 
 
 class Player_Run(Run):
-    def handle_input(self, player):
-        old_direction_state = player.direction_state
+    """
+    Player-specific Run state. Allows interrupting movement with attacks/dodges.
+    """
+
+    def handle_input(self, entity) -> None:
+        old_direction_state = entity.direction_state
         keys = pygame.key.get_pressed()
         pressed_keys = pygame.key.get_just_pressed()
         mouse = pygame.mouse.get_pressed()
         if mouse[pygame.BUTTON_LEFT - 1]:
-            player.change_state(player.states["LIGHT_ATTACK"])
+            entity.change_state(entity.states["LIGHT_ATTACK"])
 
         elif mouse[pygame.BUTTON_RIGHT - 1]:
-            player.change_state(player.states["HEAVY_ATTACK"])
+            entity.change_state(entity.states["HEAVY_ATTACK"])
 
         elif pressed_keys[pygame.K_r]:
-            player.change_state(player.states["BLOCK"])
+            entity.change_state(entity.states["BLOCK"])
 
         elif pressed_keys[pygame.K_SPACE]:
-            player.change_state(player.states["DODGE"])
+            entity.change_state(entity.states["DODGE"])
 
         elif pressed_keys[pygame.K_e]:
-            player.interacting = True
+            entity.interacting = True
 
         elif (
             keys[pygame.K_a] or keys[pygame.K_s] or keys[pygame.K_d] or keys[pygame.K_w]
         ):
-            player.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
-            player.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
-            if player.direction.length_squared() > 0:
-                player.direction.normalize_ip()
-                player.update_direction()
-                if player.direction_state != old_direction_state:
-                    player.set_animation(loop_start=2, sync_with_current=True)
+            entity.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
+            entity.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
+            if entity.direction.length_squared() > 0:
+                entity.direction.normalize_ip()
+                entity.update_direction()
+                if entity.direction_state != old_direction_state:
+                    entity.set_animation(loop_start=2, sync_with_current=True)
             else:
-                player.change_state(player.states["IDLE"])
+                entity.change_state(entity.states["IDLE"])
         else:
-            player.change_state(player.states["IDLE"])
+            entity.change_state(entity.states["IDLE"])
 
 
 class Player_Death(State):
-    def enter(self, player):
-        player.set_animation(speed=5, loop=False)
+    """
+    State handling the player's death animation. Disables all input.
+    """
 
-    def execute(self, player):
-        if player.current_animation.finished:
-            player.change_state(player.states["IDLE"])
+    def enter(self, entity) -> None:
+        entity.set_animation(speed=5, loop=False)
 
-    def exit(self, player):
-        player.is_alive = False
+    def execute(self, entity) -> None:
+        if entity.current_animation.finished:
+            entity.change_state(entity.states["IDLE"])
+
+    def exit(self, entity) -> None:
+        entity.is_alive = False
 
 
 class Player_Block(Block):
-    def handle_input(self, player):
-        old_direction_state = player.direction_state
+    """
+    Player-specific Block state. Allows the player to slowly walk while blocking.
+    """
+
+    def handle_input(self, entity) -> None:
+        old_direction_state = entity.direction_state
         keys = pygame.key.get_pressed()
         released_key = pygame.key.get_just_released()
 
         if released_key[pygame.K_r]:
-            player.change_state(player.states["IDLE"])
+            entity.change_state(entity.states["IDLE"])
 
         elif (
             keys[pygame.K_a] or keys[pygame.K_s] or keys[pygame.K_d] or keys[pygame.K_w]
         ):
-            player.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
-            player.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
-            if player.direction.length_squared() > 0:
-                player.direction.normalize_ip()
-                player.update_direction()
-                if player.direction_state != old_direction_state:
-                    player.set_animation(loop_start=2, sync_with_current=True)
+            entity.direction.x = int(keys[pygame.K_d]) - int(keys[pygame.K_a])
+            entity.direction.y = int(keys[pygame.K_s]) - int(keys[pygame.K_w])
+            if entity.direction.length_squared() > 0:
+                entity.direction.normalize_ip()
+                entity.update_direction()
+                if entity.direction_state != old_direction_state:
+                    entity.set_animation(loop_start=2, sync_with_current=True)
             else:
                 pass
         else:
-            player.direction = pygame.Vector2()
+            entity.direction = pygame.Vector2()
 
 
 class Player_Stun(Stun):
-    def handle_input(self, player):
+    """
+    Player-specific Stun state. Allows the player to 'break' out of a stun early
+    at the cost of stamina by pressing the Q key.
+    """
+
+    def handle_input(self, entity) -> None:
         pressed_keys = pygame.key.get_just_pressed()
-        if pressed_keys[pygame.K_q] and player.stamina >= 4.0:
-            player.stamina -= 4.0
-            player.cooldowns["stun"] = 0
-            player.cooldowns["imunity"] = 0.5
-            player.sound_effects["break"][0].play()
-            player.change_state(player.states["IDLE"])
+        if pressed_keys[pygame.K_q] and entity.stamina >= 4.0:
+            entity.stamina -= 4.0
+            entity.cooldowns["stun"] = 0
+            entity.cooldowns["imunity"] = 0.5
+            entity.sound_effects["break"][0].play()
+            entity.change_state(entity.states["IDLE"])
 
 
 class Player_Heavy_Attack(Heavy_Attack):
-    def handle_input(self, player):
-        if player.attack_hitbox == None:
+    """
+    Player-specific Heavy Attack. Allows the player to feint (cancel) the attack
+    during its windup phase to bait out enemy parries.
+    """
+
+    def handle_input(self, entity) -> None:
+        if entity.attack_hitbox is None:
             pressed_keys = pygame.key.get_just_pressed()
             if pressed_keys[pygame.K_f]:
-                player.change_state(player.states["IDLE"])
-                player.stamina += 2.0
+                entity.change_state(entity.states["IDLE"])
+                entity.stamina += 2.0
 
 
 class Player_Dialog(State):
-    def enter(self, player):
-        player.set_animation(speed=8, loop=True)
+    """
+    State active while the player is speaking to an NPC.
+    Disables all movement and combat inputs until the dialogue UI is closed.
+    """
+
+    def enter(self, entity) -> None:
+        entity.set_animation(speed=8, loop=True)
+
+    def execute(self, entity) -> None:
+        entity.regen_stamina()

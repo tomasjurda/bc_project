@@ -1,12 +1,32 @@
-"""Module"""
+"""
+Module containing the CombatManager class responsible for handling
+hit detection, blocking, parrying, and damage resolution between entities.
+"""
 
 import random
 import pygame
+from source.entities.entity import Entity
 
 
 class CombatManager:
-    def check_hits(self, player, enemy_sprites):
-        # PLAYER ATTACK
+    """
+    Manages combat interactions such as hit detection, blocking angles,
+    and applying knockback/damage between the player and enemies.
+    """
+
+    def check_hits(
+        self, player: Entity, enemy_sprites: pygame.sprite.Group | list[Entity]
+    ) -> None:
+        """
+        Checks for active attack hitboxes intersecting with hurtboxes for both
+        the player/npc with hostile group for that specific entity
+
+        Args:
+            player (Entity): Entity (usually the Player)
+            enemy_sprites (pygame.sprite.Group | list[Entity]): A group or list of enemy entities for the "player" entity
+        """
+
+        # Player attack
         if player.attack_hitbox:
             attack_type = 1
             if "HEAVY_ATTACK" in player.current_state_name:
@@ -26,7 +46,7 @@ class CombatManager:
                     player.hit_entities.append(enemy)
                     self.resolve_hit(player, enemy, attack_type)
 
-        # ENEMY ATTACKS
+        # Enemy attacks
         for enemy in enemy_sprites:
             if enemy.attack_hitbox and "DEATH" not in player.current_state_name:
                 attack_type = 1
@@ -40,11 +60,22 @@ class CombatManager:
                     enemy.hit_entities.append(player)
                     self.resolve_hit(enemy, player, attack_type)
 
-    def resolve_hit(self, attacker, defender, attack_type):
+    def resolve_hit(self, attacker: Entity, defender: Entity, attack_type: int) -> None:
+        """
+        Resolves the outcome of a successful hitbox intersection.
+        Handles dodging, blocking angles, parrying, and damage application.
+
+        Args:
+            attacker (Entity): The entity delivering the attack.
+            defender (Entity): The entity receiving the attack.
+            attack_type (int): The type of attack (1 for Light, 2 for Heavy).
+        """
+        # 1. Check Dodge (Invulnerability frames)
         if defender.is_dodging:
             random.choice(attacker.sound_effects["miss"]).play()
             return
 
+        # 2. Check Block / Parry
         if defender.is_blocking and attack_type == 1 or defender.is_parying:
             vec_to_attacker = pygame.Vector2(
                 attacker.hitbox_rect.center
@@ -73,9 +104,12 @@ class CombatManager:
             else:
                 pass
 
+        # 3. Direct Hit (Calculate Knockback and Apply Damage)
         knockback_dir = pygame.Vector2(defender.hitbox_rect.center) - pygame.Vector2(
             attacker.hitbox_rect.center
         )
+
+        # Normalize the knockback vector so the distance doesn't affect the knockback speed
         if knockback_dir.length_squared() > 0:
             knockback_dir.normalize_ip()
         random.choice(attacker.sound_effects["damage"]).play()

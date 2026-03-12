@@ -1,5 +1,10 @@
-import random
+"""
+Module providing the base NPC class, which extends the Entity class.
+It adds AI decision-making (Rule-based, Decision Trees, RL), pathfinding,
+and context aggregation methods for combat predictions.
+"""
 
+import random
 import numpy as np
 import pygame
 
@@ -24,12 +29,46 @@ from source.core.settings import (
 
 
 class NPC(Entity):
+    """
+    Base class for all Non-Playable Characters (both hostile enemies and friendly townsfolk).
+
+    Integrates with the DataManager to load machine learning models (brains)
+    that dictate combat behavior based on the current game state context.
+
+    Attributes:
+        current_collisions (pygame.sprite.Group): Group of environment colliders.
+        respawn_pos (tuple[float, float]): The original spawn point for resetting.
+        hostile (bool): Flag indicating if the NPC should attack the player.
+        player (Entity): Reference to the player (or another NPC acting as the target).
+        current_target (pygame.Vector2): The immediate coordinate the NPC is walking towards.
+        path_to_player (list[tuple]): The A* path nodes currently being followed.
+        brain_type (str): Identifier for the AI model used ("basic", "tree", "rl_mlp").
+        brain (Any): The loaded AI model instance.
+    """
+
     def __init__(
-        self, pos, groups, sprite_sheet, collisions, player, brain_type="basic"
-    ):
+        self,
+        pos: tuple[float, float],
+        groups: list | tuple,
+        sprite_sheet: pygame.Surface,
+        collisions: pygame.sprite.Group,
+        player: Entity | None,
+        brain_type: str = "basic",
+    ) -> None:
+        """
+        Initializes the NPC, loads its specified AI brain, and configures its states.
+
+        Args:
+            pos (tuple[float, float]): Initial (x, y) spawn coordinates.
+            groups (list | tuple): Pygame sprite groups to attach this entity to.
+            sprite_sheet (pygame.Surface): The image grid containing animations.
+            collisions (pygame.sprite.Group): Environment collision objects.
+            player (Entity | None): The primary combat target.
+            brain_type (str): The AI model type to load ("basic", "tree", "rl_mlp").
+        """
         super().__init__(pos, groups, sprite_sheet)
 
-        # SETTING THIS IN CREATION
+        # Set during initialization
         self.current_collisions = collisions
         self.respawn_pos = pos
 
@@ -42,7 +81,7 @@ class NPC(Entity):
         self.brain = DataManager.get_brain(brain_type)
 
         self.fsm = FSM(self)
-        # STATES AND ANIMATIONS
+        # States and animations
         self.states = {
             "IDLE": {
                 "state": Enemy_Idle(),
@@ -126,14 +165,14 @@ class NPC(Entity):
             },
         }
 
-        # COOLDOWNS
+        # Cooldowns
         self.cooldowns = {"reaction": 0, "stun": 0, "imunity": 0}
 
         self.hitpoints = self.max_hitpoints = 200
         self.damage = 20
         self.speed = 100
 
-        # AUDIO
+        # Sound effects
         self.sound_effects = {
             "hit": [
                 SoundManager.get_sound("sword_hit_1"),
@@ -167,7 +206,11 @@ class NPC(Entity):
 
         self.change_state(self.states["IDLE"])
 
-    def face_player(self):
+    def face_player(self) -> None:
+        """
+        Calculates the vector pointing towards the player and updates the
+        entity's facing direction to visually track them.
+        """
         if not self.player:
             return
         vec_to_player = pygame.Vector2(self.player.rect.center) - pygame.Vector2(
@@ -180,7 +223,14 @@ class NPC(Entity):
         else:
             self.direction = pygame.Vector2()
 
-    def get_context_rl(self):
+    def get_context_rl(self) -> list[float]:
+        """
+        Compiles the normalized combat state into a 1D array specifically
+        formatted for the Reinforcement Learning (PPO) Neural Network.
+
+        Returns:
+            list[float]: A list of exactly 23 features representing the combat context.
+        """
         # 1. Distance
         dist = pygame.Vector2(self.rect.center).distance_to(
             pygame.Vector2(self.player.rect.center)
@@ -206,7 +256,14 @@ class NPC(Entity):
 
         return data
 
-    def get_context(self):
+    def get_context(self) -> list[float]:
+        """
+        Compiles the combat state into a simpler 1D array used by the
+        Decision Tree model and the SimpleBrain baseline.
+
+        Returns:
+            list[float]: A list of 7 distinct combat variables.
+        """
         dist = pygame.Vector2(self.rect.center).distance_to(
             pygame.Vector2(self.player.rect.center)
         )
@@ -221,7 +278,11 @@ class NPC(Entity):
             SHARED_STATE_MAP.get(self.player.current_state_name, 0),
         ]
 
-    def get_path(self):
+    def get_path(self) -> None:
+        """
+        Requests the global GridMap to calculate a smoothed A* path
+        from the NPC's current position to the player's position.
+        """
         try:
             self.path_to_player = self.g_map.get_path(
                 self.rect.center, self.player.rect.center
@@ -229,18 +290,32 @@ class NPC(Entity):
         except KeyError:
             self.path_to_player = None
 
-    def respawn(self):
+    def respawn(self) -> None:
+        """Resets stats via the parent Entity class and moves the NPC back to its spawn."""
         super().respawn()
         self.rect.center = self.respawn_pos
         self.hitbox_rect.center = self.respawn_pos
 
-    def update(self, dt):
+    def update(self, dt: float) -> None:
+        """
+        Advances the entity logic by one frame.
+
+        Args:
+            dt (float): Delta time since last frame.
+        """
         self.dt = dt
         self.update_cooldowns(dt)
         self.fsm.update()
         self.animate()
 
-    def decide_action(self):
+    def decide_action(self) -> int:
+        """
+        Queries the assigned AI brain (Simple, Tree, or RL) to determine
+        the next tactical combat action.
+
+        Returns:
+            int: The integer code representing the chosen action.
+        """
         if not self.hostile:
             return SHARED_ACTION_MAP_REVERSED.get("IDLE")
 
@@ -264,7 +339,18 @@ class NPC(Entity):
             return prediction
         return SHARED_ACTION_MAP_REVERSED.get("IDLE")
 
-    def draw_ui(self, surface, offset, debug_mode):
+    def draw_ui(
+        self, surface: pygame.Surface, offset: pygame.Vector2, debug_mode: bool
+    ) -> None:
+        """
+        Renders standard parent UI elements (healthbars) and adds NPC-specific
+        debug visualizations like pathfinding nodes and brain type.
+
+        Args:
+            surface (pygame.Surface): The main Pygame display surface.
+            offset (pygame.Vector2): Camera scroll offset.
+            debug_mode (bool): If True, draws paths and data labels.
+        """
         super().draw_ui(surface, offset, debug_mode)
         if debug_mode:
             x = self.rect.x - offset.x

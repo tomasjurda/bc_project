@@ -1,19 +1,59 @@
+"""
+Module defining the NonHostileNPC class. This entity handles dynamic,
+LLM-driven conversations, quest tracking, and affinity systems.
+"""
+
+import pygame
+
+from source.entities.player import Player
 from source.entities.npc import NPC
+
 from source.utils.data_manager import DataManager
+from source.utils.quest_manager import QuestManager
 
 
 class NonHostileNPC(NPC):
+    """
+    A subclass of NPC representing a neutral or friendly character.
+    These NPCs can be spoken to via the DialogUI, update quest states,
+    and maintain an affinity score based on how the player treats them.
+
+    Attributes:
+        quests (QuestManager): Reference to the global QuestManager.
+        affinity (int): Numerical representation of how much the NPC likes the player.
+        name (str): The NPC's display name.
+        role_description (str): Background information injected into the LLM prompt.
+        greeting_text (str): The very first message the NPC says when spoken to.
+        personal_knowledge (str): Secret or specific lore known only to this NPC.
+        quests_data (dict): Dictionary defining quests this NPC interacts with.
+        prompt_context (str): The compiled system prompt fed to the LLM.
+        chat_history (list[dict]): Running log of the conversation.
+    """
+
     def __init__(
         self,
-        pos,
-        groups,
-        sprite_sheet,
-        collisions,
-        player,
-        npc_data,
-        quests,
-        brain_type="BASIC",
-    ):
+        pos: tuple[float, float],
+        groups: list | tuple,
+        sprite_sheet: pygame.Surface,
+        collisions: pygame.sprite.Group,
+        player: Player,
+        npc_data: dict,
+        quests: QuestManager,
+        brain_type: str = "BASIC",
+    ) -> None:
+        """
+        Initializes the friendly NPC with its dialogue configuration and personality.
+
+        Args:
+            pos (tuple[float, float]): Initial (x, y) spawn coordinates.
+            groups (list | tuple): Pygame sprite groups to attach this entity to.
+            sprite_sheet (pygame.Surface): The image grid containing animations.
+            collisions (pygame.sprite.Group): Environment collision objects.
+            player (Player): Reference to the player entity.
+            npc_data (dict): Dictionary containing name, lore, and quest rules from JSON.
+            quests (QuestManager): Reference to the global QuestManager.
+            brain_type (str): The AI combat model to use if the NPC becomes hostile.
+        """
         super().__init__(pos, groups, sprite_sheet, collisions, player, brain_type)
 
         self.quests = quests
@@ -32,7 +72,12 @@ class NonHostileNPC(NPC):
         self.prompt_context = "default"
         self.chat_history = []
 
-    def update_prompt(self):
+    def update_prompt(self) -> None:
+        """
+        Dynamically constructs the system prompt instructing the local LLM.
+        It pulls current affinity, global lore, and the specific status of active quests
+        so the NPC acts appropriately to the exact current game state.
+        """
         affinity_text = "Neutral."
         if self.affinity < 0:
             affinity_text = (
@@ -91,7 +136,19 @@ Player: "I brought your hammer."
 Response: {{"thought_process": "The player is turning in a quest. They did not use explicit pleasantries like 'here you go friend', so affinity is 0. I will accept the hammer.", "dialogue": "Finally! Hand it over.", "affinity_change": 0, "quest_update": "hammer_quest:completed"}}
 """
 
-    def take_hit(self, damage, attack_type, knockback):
+    def take_hit(
+        self, damage: float, attack_type: int, knockback: pygame.Vector2
+    ) -> None:
+        """
+        Overrides the standard Entity damage handler.
+        If the player attacks this friendly NPC, they immediately become hostile
+        and will start fighting back using their assigned AI brain.
+
+        Args:
+            damage (float): The amount of damage dealt.
+            attack_type (int): The type multiplier of the attack (light, heavy, parry).
+            knockback (pygame.Vector2): The directional vector to push the NPC.
+        """
         if not self.hostile:
             self.hostile = True
 

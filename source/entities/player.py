@@ -1,5 +1,6 @@
-import pygame
-
+"""
+Module defining the Player entity, containing stats, states, and sound effects.
+"""
 
 from source.fsm.general_states import Dodge, Light_Attack
 from source.fsm.player_states import (
@@ -18,22 +19,52 @@ from source.utils.sound_manager import SoundManager
 
 
 class Player(Entity):
+    """
+    The main character controlled by the user.
+
+    Inherits from the base Entity class and manages finite state machines,
+    combat statistics, animations, and audio effects.
+
+    Attributes:
+        current_collisions (pygame.sprite.Group): Group of collidable sprites in the current level.
+        respawn_point (dict): Stores the level name and (x, y) position to respawn upon death.
+        is_alive (bool): Flag indicating if the player is currently alive.
+        interacting (bool): Flag indicating if the player is trying to interact with an object/NPC.
+        fsm (FSM): The Finite State Machine controlling player behaviors.
+        states (dict): Configuration mapping state names to state objects and animation frames.
+        cooldowns (dict): Trackers for time-based cooldowns (e.g., stun, immunity).
+        sound_effects (dict): Pre-loaded sound effects mapped to actions.
+        ...
+    """
+
     def __init__(self, pos, groups, sprite_sheet):
+        """
+        Initializes the Player entity at a given position.
+
+        Args:
+            pos (tuple | list): Initial (x, y) spawn coordinates.
+            groups (list | tuple): Pygame sprite groups to add the player to.
+            sprite_sheet (pygame.Surface): The image surface containing animation frames.
+        """
         super().__init__(pos, groups, sprite_sheet)
 
-        # SETTING THIS IN SWITCH_LEVEL
-        self.current_collisions = pygame.sprite.Group()
+        # This is dynamically updated when switching levels in game.py + current_collisions
         self.respawn_point = {"level": None, "pos": None}
 
         self.is_alive = True
-        # STATS
-        self.hitpoints = self.max_hitpoints = 200
+        self.interacting = False
+
+        # Combat stats
+        self.hitpoints = 200
+        self.max_hitpoints = 200
         self.damage = 20
         self.speed = 150
 
+        # Initialize the state machine
         self.fsm = FSM(self)
 
-        # STATES AND ANIMATIONS
+        # States and animations
+        # Load_frames parameters are generally: (row_index, frame_count, flip_horizontal)
         self.states = {
             "IDLE": {
                 "state": Player_Idle(),
@@ -127,12 +158,10 @@ class Player(Entity):
             },
         }
 
-        # COOLDOWNS
+        # Cooldowns
         self.cooldowns = {"stun": 0, "imunity": 0}
 
-        self.interacting = False
-
-        # AUDIO
+        # Sound effects
         self.sound_effects = {
             "hit": [
                 SoundManager.get_sound("sword_hit_1"),
@@ -164,13 +193,23 @@ class Player(Entity):
             "break": [SoundManager.get_sound("break")],
         }
 
+        # Initialize the starting state
         self.change_state(self.states["IDLE"])
 
     def respawn(self):
+        """
+        Resets the player's stats and triggers the parent Entity respawn logic.
+        """
         super().respawn()
         self.is_alive = True
 
     def update(self, dt):
+        """
+        Updates the player state, cooldowns, and animations once per frame.
+
+        Args:
+            dt (float): Delta time (time elapsed since the last frame).
+        """
         self.dt = dt
         self.update_cooldowns(dt)
         self.fsm.update()

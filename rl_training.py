@@ -1,3 +1,8 @@
+"""
+Module for training and evaluating a Reinforcement Learning (RL) agent
+using Proximal Policy Optimization (PPO) in a custom RPG environment.
+"""
+
 import os
 import pygame
 from stable_baselines3 import PPO
@@ -7,39 +12,49 @@ from stable_baselines3.common.callbacks import CheckpointCallback
 from source.rl.rpg_env import RpgEnv
 from source.utils.sound_manager import SoundManager
 
-# Cesta pro ukládání modelů
+# Directory paths for saving models and tensorboard logs
 models_dir = "data/rl_models"
 log_dir = "data/logs"
 model_name = "ppo_rpg_agent"
 model_path = f"{models_dir}/{model_name}.zip"
 
+
+# Ensure the required directories exist before starting
 if not os.path.exists(models_dir):
     os.makedirs(models_dir)
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
 
-def train():
-    print("--- TRÉNINK ---")
-    # 1. Prostředí (Headless)
+def train() -> None:
+    """
+    Initializes a headless training environment and trains a PPO model.
+    Loads an existing model if one is found, otherwise creates a new one.
+    """
+    print("RL model training")
+
+    # 1. Environment Setup (Headless)
     SoundManager.init(enable_audio=False)
     SoundManager.load_all_sounds()
 
     env = RpgEnv(render_mode=None)
 
+    # Callback to periodically save the model during long training sessions
     checkpoint_callback = CheckpointCallback(
         save_freq=100000, save_path=models_dir, name_prefix="ppo_rpg_checkpoint"
     )
 
-    # 2. Načtení nebo Vytvoření modelu
+    # 2. Load or Create Model
     if os.path.exists(model_path):
-        print(f"Nalezen existující model: {model_path}")
-        print("Načítám a pokračuji v tréninku...")
+        print(f"Found existing model: {model_path}")
+        print("Continuing the training...")
 
+        # Load existing model and attach the environment and logger
         model = PPO.load(model_path, env=env, tensorboard_log=log_dir)
         reset_timesteps = False
     else:
-        print("Model nenalezen, vytvářím nový...")
+        print("Model not found, creating new...")
+        # Initialize a new PPO model with a Multi-Layer Perceptron (MLP) policy
         model = PPO(
             "MlpPolicy",
             env,
@@ -52,7 +67,7 @@ def train():
         )
         reset_timesteps = True
 
-    # Trénink
+    # 3. Execution
     print("Starting training. This may take a few hours. Press CTRL+C to stop safely.")
     try:
         model.learn(
@@ -61,30 +76,37 @@ def train():
             callback=checkpoint_callback,
         )
     except KeyboardInterrupt:
-        print("\nTrénink přerušen uživatelem. Ukládám současný stav...")
+        print("\nTraining interrupted. Saving...")
 
-    # Uložení
+    # Save the final model state
     model.save(model_path)
-    print("Model uložen.")
+    print("Model saved.")
 
 
 def watch():
-    print("--- SLEDOVÁNÍ (ESC pro ukončení) ---")
+    """
+    Initializes a human-rendered environment and watches a trained PPO model play.
+    Allows the user to exit safely by pressing the ESC key.
+    """
+    print("Spectating (ESC for escape) ---")
 
     if not os.path.exists(model_path):
-        print("Model neexistuje! Nejdřív spusť trénink.")
+        print("Model doesnt exist, train first.")
         return
 
-    env = RpgEnv(render_mode="human")
-    model = PPO.load(model_path)
-
+    # Initialize audio for the visual presentation
     SoundManager.init(enable_audio=True)
     SoundManager.load_all_sounds()
     SoundManager.set_master_volume(0.4)
 
+    # Render mode is set to human to display the Pygame window
+    env = RpgEnv(render_mode="human")
+    model = PPO.load(model_path)
+
     obs, _ = env.reset()
     running = True
     while running:
+        # Handle Pygame window events
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
@@ -95,29 +117,30 @@ def watch():
         if not running:
             break
 
-        # Predikce akce
+        # Predict the next action based on the current observation
         action, _states = model.predict(obs)
 
-        # Krok hry
+        # Step the environment forward based on the agent's action
         obs, reward, terminated, truncated, info = env.step(action)
         print(
-            f"reaction: {env.agent.cooldowns["reaction"]:.2f}, action: {env.agent.current_action}, reward: {reward:.2f}"
+            f"reaction: {env.agent.cooldowns['reaction']:.2f}, action: {env.agent.current_action}, reward: {reward:.2f}"
         )
 
+        # Reset the environment if the episode finishes# Reset the environment if the episode finishes
         if terminated or truncated:
             obs, _ = env.reset()
 
-    # Úklid po ukončení
+    # Cleanup after closing the window
     pygame.quit()
-    print("Ukončeno.")
+    print("Ending...")
 
 
 if __name__ == "__main__":
-    mode = input("Vyber mód (train/watch): ").strip().lower()
+    mode = input("Choose mode (train/watch): ").strip().lower()
 
     if mode == "train":
         train()
     elif mode == "watch":
         watch()
     else:
-        print("Neznámý mód.")
+        print("Unknown mode.")

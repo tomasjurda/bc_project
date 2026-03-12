@@ -1,12 +1,40 @@
+"""
+Module providing the DialogUI class, which handles rendering the chat interface,
+processing user typing input, and updating NPC states/quests based on LLM responses.
+"""
+
 import json
 import pygame
 
 from source.core.settings import WINDOW_HEIGHT, WINDOW_WIDTH
 from source.dialogs.llm_client import LLMClient
 
+from source.entities.player import Player
+from source.entities.non_hostile_npc import NonHostileNPC
+
 
 class DialogUI:
-    def __init__(self):
+    """
+    Manages the visual dialogue interface, user input, and state updates.
+
+    Attributes:
+        height (int): The pixel height of the dialog box.
+        rect (pygame.Rect): The bounding box for the entire UI element.
+        font (pygame.font.Font): Font used for standard dialogue text.
+        title_font (pygame.font.Font): Font used for NPC names.
+        small_font (pygame.font.Font): Font used for metadata (quests, affinity).
+        surface (pygame.Surface): An alpha-supporting surface for background transparency.
+        active (bool): Flag indicating if the dialogue UI is currently open.
+        current_npc (NonHostileNPC | None): The NPC currently being spoken to.
+        player (Player | None): Reference to the player entity.
+        user_input (str): The current string the user is typing.
+        llm (LLMClient): The background client handling local model generation.
+        provoked_trigger (bool): Flag indicating if the NPC was angered during the chat.
+        can_type (bool): Flag blocking user input if the NPC becomes hostile.
+    """
+
+    def __init__(self) -> None:
+        """Initializes the UI layout, fonts, and state trackers."""
         # UI Layout Settings
         self.height = 250
         self.rect = pygame.Rect(
@@ -33,7 +61,14 @@ class DialogUI:
         self.provoked_trigger = False
         self.can_type = True
 
-    def start_dialogue(self, player, npc):
+    def start_dialogue(self, player: Player, npc: NonHostileNPC) -> None:
+        """
+        Opens the dialogue UI and binds it to the interacting player and NPC.
+
+        Args:
+            player: The player entity initiating the conversation.
+            npc: The non-hostile NPC being spoken to.
+        """
         self.active = True
         self.current_npc = npc
         self.player = player
@@ -51,7 +86,10 @@ class DialogUI:
                 }
             ]
 
-    def close_dialogue(self):
+    def close_dialogue(self) -> None:
+        """
+        Closes the UI, stops any ongoing LLM generations, and handles hostility triggers.
+        """
         self.active = False
 
         self.llm.current_session_id += 1
@@ -65,7 +103,13 @@ class DialogUI:
         self.player.change_state(self.player.states["IDLE"])
         self.player = None
 
-    def handle_event(self, event):
+    def handle_event(self, event: pygame.event.Event) -> None:
+        """
+        Processes keyboard inputs specifically for the dialogue interface.
+
+        Args:
+            event (pygame.event.Event): The Pygame event to evaluate.
+        """
         if not self.active:
             return
 
@@ -90,10 +134,14 @@ class DialogUI:
             else:
                 self.user_input += event.unicode
 
-    def update(self):
+    def update(self) -> None:
+        """
+        Runs once per frame. Checks if the background LLM thread has returned a new
+        JSON response. If so, parses it, updates quests/affinity, and updates history.
+        """
         if self.llm.response_text:
             try:
-                # Očištění případných markdown bloků (např. ```json ... ```)
+                # Clean up any markdown blocks that the LLM might hallucinate around the JSON
                 clean_json = self.llm.response_text.strip()
                 if clean_json.startswith("```json"):
                     clean_json = clean_json[7:]
@@ -148,7 +196,18 @@ class DialogUI:
 
             self.llm.response_text = None
 
-    def wrap_text(self, text, max_width, font):
+    def wrap_text(self, text: str, max_width: int, font: pygame.font.Font) -> list[str]:
+        """
+        Splits a long string into multiple lines to ensure it fits within a UI container.
+
+        Args:
+            text (str): The raw text to wrap.
+            max_width (int): The maximum pixel width a single line can occupy.
+            font (pygame.font.Font): The font used to calculate text widths.
+
+        Returns:
+            list[str]: A list of string lines that fit the constraint.
+        """
         words = text.split(" ")
         lines = []
         current_line = ""
@@ -165,7 +224,14 @@ class DialogUI:
             lines.append(current_line)
         return lines
 
-    def draw(self, display_surface):
+    def draw(self, display_surface: pygame.Surface) -> None:
+        """
+        Renders the entire dialogue interface, including chat history,
+        typing input, and the NPC's statistical information.
+
+        Args:
+            display_surface (pygame.Surface): The main Pygame display surface.
+        """
         if not self.active or not self.current_npc:
             return
 
@@ -192,7 +258,7 @@ class DialogUI:
             2,
         )
 
-        # LEFT PANEL: CHAT HISTORY & INPUT
+        # Left panel: chat history and input
         padding = 15
         max_text_width = chat_width - (padding * 2)
         y_offset = self.rect.y + padding
@@ -255,7 +321,7 @@ class DialogUI:
 
             display_surface.blit(in_surf, (self.rect.x + padding, input_y))
 
-        # RIGHT PANEL: NPC INFO, QUESTS & MODEL
+        # Right panel: npc info, quests and model
         info_pad = 15
         info_x = info_rect_x + info_pad
         info_y = self.rect.y + padding

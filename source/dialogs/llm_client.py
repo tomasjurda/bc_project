@@ -1,9 +1,27 @@
+"""
+Module handling background communication with local Large Language Models (LLMs) via Ollama.
+"""
+
 import threading
 import ollama
 
 
 class LLMClient:
+    """
+    A client for requesting and receiving dialogue from a local LLM.
+
+    Attributes:
+        preferred_model (str): The primary LLM to use (e.g., 'llama3.1:8b').
+        fallback_model (str): The backup LLM if the primary fails.
+        active_model (str): The model currently being used for generation.
+        is_generating (bool): Whether a request is currently being processed.
+        response_text (str): The raw JSON string response from the LLM.
+        current_session_id (int): Tracker to match threads to current dialogue states.
+        response_schema (dict): JSON schema enforcing the LLM's output structure.
+    """
+
     def __init__(self, preferred_model="llama3.1:8b", fallback_model="qwen2.5:3b"):
+        """Initializes the LLM Client and determines the active model."""
         self.preferred_model = preferred_model
         self.fallback_model = fallback_model
 
@@ -13,6 +31,7 @@ class LLMClient:
 
         self.current_session_id = 0
 
+        # Define the strict JSON structure the LLM must follow
         self.response_schema = {
             "type": "object",
             "properties": {
@@ -42,9 +61,14 @@ class LLMClient:
             ],
         }
 
-        self._determine_model()
+        # Test which model can be loaded at startup
+        threading.Thread(target=self._determine_model, daemon=True).start()
 
     def _determine_model(self):
+        """
+        Tests if the preferred model can be loaded into memory.
+        Falls back to the smaller model if an exception occurs.
+        """
         print(f"Testing {self.preferred_model} for memory limits...")
         try:
             ollama.chat(
@@ -60,6 +84,13 @@ class LLMClient:
             self.active_model = self.fallback_model
 
     def request_response(self, system_prompt, history):
+        """
+        Spawns a background worker thread to fetch a response from the LLM.
+
+        Args:
+            system_prompt (str): Context and personality instructions for the NPC.
+            history (list): A list of recent chat message dictionaries.
+        """
         if self.is_generating:
             return
 
@@ -75,8 +106,15 @@ class LLMClient:
         thread.start()
 
     def _worker(self, system_prompt, history, session_id):
+        """
+        Background worker that makes the Ollama API call.
+
+        Args:
+            system_prompt (str): The context instructions for the NPC.
+            history (list): A list of recent chat message dictionaries.
+            session_id (int): The ID of this generation session.
+        """
         messages = [{"role": "system", "content": system_prompt}]
-        # print(system_prompt)
 
         MAX_MESSAGES = 5
         recent_history = history[-MAX_MESSAGES:]
@@ -86,7 +124,6 @@ class LLMClient:
             messages.append(
                 {"role": api_role, "content": msg.get("raw_text", msg["text"])}
             )
-
         try:
             response = ollama.chat(
                 model=self.active_model,

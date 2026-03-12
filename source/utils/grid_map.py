@@ -1,7 +1,8 @@
 """
-Module providing utility map class that has methods for:
-creating grid representation of maps
-creating a path from point A to point B, using A* algorithm with path smoothing optimization
+Module providing a utility map class that has methods for:
+- Creating a grid representation of maps for collision and pathfinding.
+- Creating a path from point A to point B using the A* algorithm,
+  with path-smoothing optimization applied.
 """
 
 import math
@@ -12,12 +13,29 @@ from source.core.settings import TILE_SIZE
 
 
 class GridMap:
-    def __init__(self):
+    """
+    A grid-based representation of the level used for AI pathfinding.
+
+    Attributes:
+        scale (int): The scaling factor for the grid (1 means 1 grid cell per TILE_SIZE).
+        scaled_tile_size (float): The pixel dimension of a single grid cell.
+        grid (list[list[int]] | None): A 2D array representing the map. 0 is walkable, 1 is a collision.
+    """
+
+    def __init__(self) -> None:
+        """Initializes the GridMap with default scaling and an empty grid."""
         self.scale = 1
         self.scaled_tile_size = TILE_SIZE / self.scale
         self.grid = None
 
-    def construct(self, p_map: pytmx.TiledMap):
+    def construct(self, p_map: pytmx.TiledMap) -> None:
+        """
+        Parses the Tiled map collisions and constructs a 2D integer array (grid).
+
+        Args:
+            p_map (pytmx.TiledMap): The loaded TMX map object.
+        """
+
         self.grid = [
             [0 for i in range(p_map.width * self.scale)]
             for j in range(p_map.height * self.scale)
@@ -32,7 +50,16 @@ class GridMap:
                     ] = 1
         # self.show_map()
 
-    def show_map(self, filename="map.txt", diff_grid=None):
+    def show_map(
+        self, filename: str = "map.txt", diff_grid: list[list[int]] | None = None
+    ) -> None:
+        """
+        Writes the current grid array to a text file for debugging purposes.
+
+        Args:
+            filename (str): The name of the output text file.
+            diff_grid (list[list[int]] | None): Optional alternative grid to print instead of self.grid.
+        """
         used_grid = None
         if diff_grid:
             used_grid = diff_grid
@@ -42,10 +69,17 @@ class GridMap:
         with open(filename, "w", encoding="utf-8") as f:
             for rows in used_grid:
                 for item in rows:
-                    f.write("%d " % item)
+                    f.write(f"{item} ")
                 f.write("\n")
 
-    def show_path(self, path):
+    def show_path(self, path: list[tuple[float, float]]) -> None:
+        """
+        Overlays a calculated path onto the grid (marked as '5'), saves it to a text file,
+        and then resets the grid back to normal. Useful for debugging A*.
+
+        Args:
+            path (list[tuple[float, float]]): The list of (x, y) pixel coordinates forming the path.
+        """
         for point in path:
             self.grid[int(point[1] / self.scaled_tile_size)][
                 int(point[0] / self.scaled_tile_size)
@@ -56,8 +90,22 @@ class GridMap:
                 int(point[0] / self.scaled_tile_size)
             ] = 0
 
-    def get_path(self, start_cords, goal_cords):
+    def get_path(
+        self, start_cords: tuple[float, float], goal_cords: tuple[float, float]
+    ) -> list[tuple[float, float]]:
+        """
+        Calculates the shortest path between two pixel coordinates using the A* algorithm.
+
+        Args:
+            start_cords (tuple[float, float]): The starting (x, y) pixel coordinates.
+            goal_cords (tuple[float, float]): The target (x, y) pixel coordinates.
+
+        Returns:
+            list[tuple[float, float]]: A smoothed path consisting of pixel coordinate tuples.
+        """
+
         def get_neighboars(point: tuple[int, int]):
+            """Helper function to find valid adjacent cells."""
             x, y = point
             valid_neigh = []
 
@@ -90,10 +138,10 @@ class GridMap:
             return valid_neigh
 
         def heuristic(a, b):
-            # Euclidean distance on a square grid
+            """Calculates the Euclidean distance heuristic between two grid nodes."""
             return math.hypot(a[0] - b[0], a[1] - b[1])
 
-        # x = col , y = row
+        # Convert pixel coordinates to grid coordinates (col, row)
         grid_start_x = int(start_cords[0] / self.scaled_tile_size)
         grid_start_y = int(start_cords[1] / self.scaled_tile_size)
         grid_goal_x = int(goal_cords[0] / self.scaled_tile_size)
@@ -109,7 +157,7 @@ class GridMap:
         came_from[start] = None
         cost_so_far[start] = 0
 
-        # MAP GRID
+        # Run A* algorithm
         while not p_queue.empty():
             current = p_queue.get()[1]
             if current == goal:
@@ -133,10 +181,11 @@ class GridMap:
                     p_queue.put((priority, next_neightboar))
                     came_from[next_neightboar] = current
 
-        # BUILD PATH
+        # Reconstruct path
         current = goal
         path = []
         while current != start:
+            # Convert grid coordinates back to center-pixel coordinates
             tile_center_x = (
                 current[0] * self.scaled_tile_size + self.scaled_tile_size / 2
             )
@@ -147,11 +196,25 @@ class GridMap:
             current = came_from[current]
         path.reverse()
 
+        # Optimize the path to remove unnecessary zig-zags
         smoothed_path = self._path_smoothing(path)
 
         return smoothed_path
 
-    def has_line_of_sight(self, p1, p2):
+    def has_line_of_sight(
+        self, p1: tuple[float, float], p2: tuple[float, float]
+    ) -> bool:
+        """
+        Determines if there is a clear, unblocked path between two pixel points
+        using Bresenham's Line Algorithm.
+
+        Args:
+            p1 (tuple): Starting pixel (x, y).
+            p2 (tuple): Target pixel (x, y).
+
+        Returns:
+            bool: True if there is an unblocked line of sight, False if blocked by collision.
+        """
         # Convert pixel coordinates back to grid coordinates (col, row)
         x1 = int(p1[0] / self.scaled_tile_size)
         y1 = int(p1[1] / self.scaled_tile_size)
@@ -184,7 +247,19 @@ class GridMap:
 
         return True
 
-    def _path_smoothing(self, path):
+    def _path_smoothing(
+        self, path: list[tuple[float, float]]
+    ) -> list[tuple[float, float]]:
+        """
+        Optimizes a blocky grid path by skipping intermediate nodes that
+        are visible to each other (i.e., having a clear line of sight).
+
+        Args:
+            path (list[tuple[float, float]]): The raw pixel coordinate path from A*.
+
+        Returns:
+            list[tuple[float, float]]: A shorter, smoothed list of key waypoints.
+        """
         if len(path) <= 2:
             return path
 
