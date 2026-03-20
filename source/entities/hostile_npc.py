@@ -22,7 +22,7 @@ class HostileNPC(NPC):
         sprite_sheet: pygame.Surface,
         collisions: pygame.sprite.Group,
         player: Entity,
-        brain_type: str = "basic",
+        brain_type: str = "basic_offensive",
     ) -> None:
         """
         Initializes the HostileNPC and sets its aggressive state.
@@ -33,7 +33,7 @@ class HostileNPC(NPC):
             sprite_sheet (pygame.Surface): The image grid containing animations.
             collisions (pygame.sprite.Group): Environment collision objects.
             player (Any): Reference to the target player entity.
-            brain_type (str): The AI model type to load ("basic", "tree", "rl_mlp").
+            brain_type (str): The AI model type to load ("basic_offensive", "basic_defensive", "tree", "rl_mlp").
         """
         super().__init__(pos, groups, sprite_sheet, collisions, player, brain_type)
         self.hostile = True

@@ -42,7 +42,7 @@ class NPC(Entity):
         player (Entity): Reference to the player (or another NPC acting as the target).
         current_target (pygame.Vector2): The immediate coordinate the NPC is walking towards.
         path_to_player (list[tuple]): The A* path nodes currently being followed.
-        brain_type (str): Identifier for the AI model used ("basic", "tree", "rl_mlp").
+        brain_type (str): Identifier for the AI model used ("basic_offensive", "basic_defensive", "tree", "rl_mlp").
         brain (Any): The loaded AI model instance.
     """
 
@@ -53,7 +53,7 @@ class NPC(Entity):
         sprite_sheet: pygame.Surface,
         collisions: pygame.sprite.Group,
         player: Entity | None,
-        brain_type: str = "basic",
+        brain_type: str = "basic_offensive",
     ) -> None:
         """
         Initializes the NPC, loads its specified AI brain, and configures its states.
@@ -64,7 +64,7 @@ class NPC(Entity):
             sprite_sheet (pygame.Surface): The image grid containing animations.
             collisions (pygame.sprite.Group): Environment collision objects.
             player (Entity | None): The primary combat target.
-            brain_type (str): The AI model type to load ("basic", "tree", "rl_mlp").
+            brain_type (str): The AI model type to load ("basic_offensive", "basic_defensive", "tree", "rl_mlp").
         """
         super().__init__(pos, groups, sprite_sheet)
 
@@ -335,7 +335,7 @@ class NPC(Entity):
                 # SIMPLE BRAIN
                 ctx = self.get_context()
                 prediction = self.brain.predict(ctx)
-            # print(SHARED_ACTION_MAP.get(prediction))
+
             return prediction
         return SHARED_ACTION_MAP_REVERSED.get("IDLE")
 

@@ -2,14 +2,12 @@
 Module defining the custom Gymnasium environment for training the RL agent.
 """
 
-from os.path import join
-
-import gymnasium as gym
 from typing import Any
+import gymnasium as gym
 import numpy as np
 import pygame
 
-from source.core.settings import WINDOW_WIDTH, WINDOW_HEIGHT
+from source.core.settings import WINDOW_WIDTH, WINDOW_HEIGHT, SHARED_ACTION_MAP
 
 from source.fsm.enemy_states import Basic_Enemy_Run
 
@@ -24,9 +22,9 @@ from source.sprites.sprite_group import AllSprites
 from source.rl.rl_enemy import RLEnemy
 
 
-class RpgEnv(gym.Env):
+class CustomEnv(gym.Env):
     """
-    Custom Gymnasium environment for an RPG combat scenario.
+    Custom Gymnasium environment for an Souls-like combat scenario.
 
     The environment handles a 1v1 combat situation where an RL agent learns
     to fight against a rule-based or tree-based NPC.
@@ -55,6 +53,7 @@ class RpgEnv(gym.Env):
         """
         super().__init__()
         self.render_mode = render_mode
+        self.debug_mode = False
 
         # ACTIONS: 0:Idle, 1:Run, 2:Dodge, 3:Block, 4:L_Atk, 5:H_Atk, 6:Feint, 7:Break
         self.action_space = gym.spaces.Discrete(8)
@@ -90,6 +89,8 @@ class RpgEnv(gym.Env):
         # Stat trackers for reward calculation
         self.last_agent_hp = None
         self.last_opp_hp = None
+        self.out_of_combat_punishment = 0
+        self.pasive_punishment = 0
 
     def reset(
         self, seed: int | None = None, options: dict[str, Any] | None = None
@@ -139,6 +140,8 @@ class RpgEnv(gym.Env):
         # Reset HP tracking statistics
         self.last_agent_hp = self.agent.hitpoints
         self.last_opp_hp = self.opponent.hitpoints
+        self.out_of_combat_punishment = 0
+        self.pasive_punishment = 0
 
         # Return initial observation (normalized context data) and empty info dict
         return np.array(self.agent.get_context_rl(), dtype=np.float32), {}
@@ -186,7 +189,11 @@ class RpgEnv(gym.Env):
         if self.render_mode == "human":
             self.display_surface.fill("gray")
             self.all_sprites.draw(
-                self.display_surface, (0, 0), WINDOW_WIDTH, WINDOW_HEIGHT, 1
+                self.display_surface,
+                (0, 0),
+                WINDOW_WIDTH,
+                WINDOW_HEIGHT,
+                self.debug_mode,
             )
 
             pygame.event.pump()
@@ -202,13 +209,9 @@ class RpgEnv(gym.Env):
     def _calculate_reward(self) -> float:
         """
         Calculates the reward for the agent based on spacing, combat events, and resource management.
-
-        Returns:
-            float: The calculated step reward.
         """
-
-        # Small penalty every frame to encourage ending the fight quickly
-        reward = -0.01
+        # Small penalty every frame to encourage ending the fight quickly (-0.1 per step)
+        reward = -0.025
 
         dist = pygame.Vector2(self.agent.hitbox_rect.center).distance_to(
             pygame.Vector2(self.opponent.hitbox_rect.center)
@@ -217,56 +220,69 @@ class RpgEnv(gym.Env):
         agent_state_name = self.agent.current_state_name
         opp_state_name = self.opponent.current_state_name
 
+        action_str = SHARED_ACTION_MAP.get(int(self.agent.current_action), "IDLE")
+
         MELEE_RANGE = 70
 
-        # Outside melee range
+        # Spacing and aggresion
         if dist > MELEE_RANGE:
-            if "RUN" in agent_state_name:
-                reward += 5.0
-            elif agent_state_name in [
-                "BLOCK",
-                "LIGHT_ATTACK",
-                "HEAVY_ATTACK",
-                "DODGE",
-                "FEINT",
-            ]:
-                reward -= 10.0
-            else:
-                reward -= 2.0
+            self.pasive_punishment = 0
 
-        # Distance <= MELEE_RANGE
+            if "RUN" in agent_state_name:
+                self.out_of_combat_punishment = 0
+                reward += 2.5
+            elif agent_state_name in ["BLOCK", "LIGHT_ATTACK", "HEAVY_ATTACK"]:
+                self.out_of_combat_punishment += 0.25
+            else:
+                self.out_of_combat_punishment += 0.05
         else:
-            if agent_state_name == "BLOCK" and opp_state_name not in [
-                "LIGHT_ATTACK",
-                "HEAVY_ATTACK",
-            ]:
-                reward -= 0.05
+            self.out_of_combat_punishment = 0
+            reward += 0.25
+
+            if agent_state_name == "IDLE" and self.agent.stamina >= 0.7:
+                self.pasive_punishment += 0.25
+            elif agent_state_name in ["BLOCK", "DODGE", "LIGHT_ATTACK", "HEAVY_ATTACK"]:
+                self.pasive_punishment = 0
+
+            if (
+                agent_state_name in ["BLOCK", "DODGE"]
+                and opp_state_name not in ["LIGHT_ATTACK", "HEAVY_ATTACK"]
+            ) or agent_state_name == "RUN":
+                reward -= 0.25
+
+        reward -= self.out_of_combat_punishment + self.pasive_punishment
+
+        # Punish trying to BREAK when not stunned
+        if agent_state_name != "STUN" and action_str == "BREAK":
+            reward -= 2.5
+
+        # Punish trying to FEINT when not winding up a heavy attack
+        if agent_state_name != "HEAVY_ATTACK" and action_str == "FEINT":
+            reward -= 2.5
 
         # HP deltas
         dmg_dealt = self.last_opp_hp - self.opponent.hitpoints
         if dmg_dealt > 0:
-            reward += (dmg_dealt * 2.0) + 10.0  # Massive reward for landing a hit
+            reward += (dmg_dealt * 2.0) + 10.0
 
         dmg_taken = self.last_agent_hp - self.agent.hitpoints
         if dmg_taken > 0:
-            reward -= (dmg_taken * 2.0) + 5.0  # Massive penalty for getting hit
+            reward -= (dmg_taken * 2.0) + 5.0
 
-        # Reward successfully dodging or blocking an INCOMING attack
+        # Combat events
         if self.opponent.attack_hitbox and dmg_taken == 0 and dist <= MELEE_RANGE:
             if "BLOCK" in agent_state_name or "DODGE" in agent_state_name:
                 reward += 3.0
                 if self.agent.is_parying:
                     reward += 1.0
 
-        # Stun status
         if "STUN" in agent_state_name:
-            reward -= 0.5
+            reward -= 1.0
         if "STUN" in opp_state_name:
-            reward += 1.0
+            reward += 2.5
 
-        # Punish the agent for completely depleting its stamina bar
-        if (self.agent.stamina / self.agent.max_stamina) < 0.1:
-            reward -= 0.05
+        if (self.agent.stamina / self.agent.max_stamina) < 0.2:
+            reward -= 0.25
 
         # Update cached HP for the next step
         self.last_opp_hp = self.opponent.hitpoints

@@ -192,6 +192,7 @@ class Level:
                         SpriteManager.get_spritesheet("basic_npc"),
                         self.collision_sprites,
                         self.player,
+                        brain_type=npc_data["mode"],
                     )
                 elif npc_data["type"] == "smart_hostile":
                     if mode == "tree":

@@ -65,10 +65,10 @@
       },
       "npcs":
       {
-        "basic_npc_1": { "type": "basic_hostile", "mode": "basic" },
-        "basic_npc_2": { "type": "basic_hostile", "mode": "basic" },
-        "basic_npc_3": { "type": "basic_hostile", "mode": "basic" },
-        "basic_npc_4": { "type": "basic_hostile", "mode": "basic" }
+        "basic_npc_1": { "type": "basic_hostile", "mode": "basic_offensive" },
+        "basic_npc_2": { "type": "basic_hostile", "mode": "basic_offensive" },
+        "basic_npc_3": { "type": "basic_hostile", "mode": "basic_offensive" },
+        "basic_npc_4": { "type": "basic_hostile", "mode": "basic_defensive" }
       }
     },
     "tree" : {
@@ -81,7 +81,7 @@
       },
       "npcs":
       {
-        "smart_npc":   { "type": "smart_hostile", "mode": "placeholder" }
+        "smart_npc":   { "type": "smart_hostile", "mode": "tree" }
       }
     },
     "rl_mlp" : {
@@ -94,7 +94,7 @@
       },
       "npcs":
       {
-        "smart_npc":   { "type": "smart_hostile", "mode": "placeholder" }
+        "smart_npc":   { "type": "smart_hostile", "mode": "rl_mlp" }
       }
     }
   },
@@ -125,9 +125,9 @@
       },
       "npcs":
       {
-        "blacksmith_grom": { "type": "non_hostile", "mode": "basic" },
-        "merchant_silas":  { "type": "non_hostile", "mode": "basic" },
-        "guard_thomas":   { "type": "non_hostile", "mode": "basic" }
+        "blacksmith_grom": { "type": "non_hostile", "mode": "basic_offensive" },
+        "merchant_silas":  { "type": "non_hostile", "mode": "basic_offensive" },
+        "guard_thomas":   { "type": "non_hostile", "mode": "basic_offensive" }
       }
     }
   }

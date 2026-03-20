@@ -39,7 +39,7 @@ class NonHostileNPC(NPC):
         player: Player,
         npc_data: dict,
         quests: QuestManager,
-        brain_type: str = "BASIC",
+        brain_type: str = "basic_offensive",
     ) -> None:
         """
         Initializes the friendly NPC with its dialogue configuration and personality.

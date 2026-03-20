@@ -1,5 +1,5 @@
-# AI-Driven RPG (Bachelor's Thesis Project)
-An action-RPG developed in Python using Pygame. This project was created for my Bachelor's thesis to explore, implement, and evaluate various Artificial Intelligence techniques within video games. It moves away from hardcoded, traditional game mechanics by utilizing Machine Learning (ML), Reinforcement Learning (RL), and Local Large Language Models (LLMs) to drive both combat behavior and dynamic narrative progression.
+# AI-Driven Game (Bachelor's Thesis Project)
+An Top-Down Souls-like developed in Python using Pygame. This project was created for my Bachelor's thesis to explore, implement, and evaluate various Artificial Intelligence techniques within video games. It moves away from hardcoded, traditional game mechanics by utilizing Machine Learning (ML), Reinforcement Learning (RL), and Local Large Language Models (LLMs) to drive both combat behavior and dynamic narrative progression.
 
 ## 1. Project Overview
 The game features several interconnected maps (Tutorial, Crossroads, City, Arena) where the player can explore, fight, and interact with the world.

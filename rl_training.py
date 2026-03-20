@@ -1,6 +1,6 @@
 """
 Module for training and evaluating a Reinforcement Learning (RL) agent
-using Proximal Policy Optimization (PPO) in a custom RPG environment.
+using Proximal Policy Optimization (PPO) in a custom environment.
 """
 
 import os
@@ -9,13 +9,16 @@ from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import CheckpointCallback
 
 
-from source.rl.rpg_env import RpgEnv
+from source.rl.custom_env import CustomEnv
 from source.utils.sound_manager import SoundManager
+
+from source.core.settings import SHARED_ACTION_MAP
+
 
 # Directory paths for saving models and tensorboard logs
 models_dir = "data/rl_models"
 log_dir = "data/logs"
-model_name = "ppo_rpg_agent"
+model_name = "ppo_agent"
 model_path = f"{models_dir}/{model_name}.zip"
 
 
@@ -37,11 +40,11 @@ def train() -> None:
     SoundManager.init(enable_audio=False)
     SoundManager.load_all_sounds()
 
-    env = RpgEnv(render_mode=None)
+    env = CustomEnv(render_mode=None)
 
     # Callback to periodically save the model during long training sessions
     checkpoint_callback = CheckpointCallback(
-        save_freq=100000, save_path=models_dir, name_prefix="ppo_rpg_checkpoint"
+        save_freq=100000, save_path=models_dir, name_prefix="ppo_agent_checkpoint"
     )
 
     # 2. Load or Create Model
@@ -72,7 +75,7 @@ def train() -> None:
     print("Starting training. This may take a few hours. Press CTRL+C to stop safely.")
     try:
         model.learn(
-            total_timesteps=10_000,
+            total_timesteps=100_000,
             reset_num_timesteps=reset_timesteps,
             callback=checkpoint_callback,
         )
@@ -101,8 +104,12 @@ def watch():
     SoundManager.set_master_volume(0.4)
 
     # Render mode is set to human to display the Pygame window
-    env = RpgEnv(render_mode="human")
+    env = CustomEnv(render_mode="human")
     model = PPO.load(model_path, device="cpu")
+
+    last_action = None
+    last_state = None
+    last_reward = 0
 
     obs, _ = env.reset()
     running = True
@@ -114,6 +121,8 @@ def watch():
             if event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     running = False
+                elif event.key == pygame.K_x:
+                    env.debug_mode = not env.debug_mode
 
         if not running:
             break
@@ -123,9 +132,22 @@ def watch():
 
         # Step the environment forward based on the agent's action
         obs, reward, terminated, truncated, info = env.step(action)
-        print(
-            f"reaction: {env.agent.cooldowns['reaction']:.2f}, action: {env.agent.current_action}, reward: {reward:.2f}"
-        )
+
+        current_action = SHARED_ACTION_MAP[int(env.agent.current_action)]
+        current_state = env.agent.current_state_name
+        current_reward = reward
+
+        if (
+            current_action != last_action
+            or current_state != last_state
+            or current_reward != last_reward
+        ):
+            print(
+                f"action: {current_action:>12},\t state: {current_state:>12},\t reward: {current_reward:.2f}"
+            )
+            last_action = current_action
+            last_state = current_state
+            last_reward = current_reward
 
         # Reset the environment if the episode finishes# Reset the environment if the episode finishes
         if terminated or truncated:

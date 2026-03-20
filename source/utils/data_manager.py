@@ -119,7 +119,7 @@ class DataManager:
             if cls._mlp_brain is None:
                 print("Loading PyTorch RL Model...")
                 cls._mlp_brain = PPO.load(
-                    join("data", "rl_models", "ppo_rpg_agent.zip"), device="cpu"
+                    join("data", "rl_models", "ppo_agent.zip"), device="cpu"
                 )
             return cls._mlp_brain
 
@@ -129,4 +129,6 @@ class DataManager:
                 cls._tree_brain = load(join("data", "npc_brain_tree_model.joblib"))
             return cls._tree_brain
 
-        return SimpleBrain()
+        if brain_type == "basic_offensive":
+            return SimpleBrain("offensive")
+        return SimpleBrain("defensive")
