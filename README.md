@@ -7,8 +7,16 @@ Instead of a single AI approach, this game utilizes multiple distinct systems:
 
 Combat AI: Enemies are driven by a state machine (StateMachine), but their decision-making is handled by different "Brains":
 - Simple Brain: A baseline, rule-based if/else system.
+
+  ![BASIC_NPC](/graphics/model_pics/basic_npc_pic.png)
+
 - Decision Tree: A machine learning model (scikit-learn) trained on combat datasets.
+
+  ![DT_NPC](/graphics/model_pics/tree_model_npc_pic.png)
+
 - Reinforcement Learning (PPO): A neural network trained via Proximal Policy Optimization (stable-baselines3 / gymnasium) in a custom simulated combat environment.
+
+  ![RL_NPC](/graphics/model_pics/rl_model_npc_pic.png)
 
 Narrative AI: Non-Hostile NPCs do not use traditional dialogue trees. Instead, they interface with a local LLM via Ollama. NPCs process player text dynamically, evaluate politeness, manage internal affinity scores, and update game quests in real-time.
 

@@ -25,7 +25,6 @@ from source.utils.data_manager import DataManager
 from source.core.settings import (
     SHARED_STATE_MAP,
     SHARED_ACTION_MAP_REVERSED,
-    SHARED_ACTION_MAP,
 )
 
 

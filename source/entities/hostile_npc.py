@@ -32,7 +32,7 @@ class HostileNPC(NPC):
             groups (list | tuple): Pygame sprite groups to attach this entity to.
             sprite_sheet (pygame.Surface): The image grid containing animations.
             collisions (pygame.sprite.Group): Environment collision objects.
-            player (Any): Reference to the target player entity.
+            player (Entity): The primary combat target.
             brain_type (str): The AI model type to load ("basic_offensive", "basic_defensive", "tree", "rl_mlp").
         """
         super().__init__(pos, groups, sprite_sheet, collisions, player, brain_type)
