@@ -2,7 +2,6 @@
 Module defining the Reinforcement Learning (RL) driven enemy NPC.
 """
 
-# import random
 from source.entities.npc import NPC
 
 
@@ -29,7 +28,7 @@ class RLEnemy(NPC):
             player (Entity): Reference to the player/entity which this entity should attack.
         """
         super().__init__(
-            pos, groups, sprite_sheet, collisions, player, brain_type="basic_offensive"
+            pos, groups, sprite_sheet, collisions, player, brain_type="rl_training"
         )
 
         self.forced_action = 0
@@ -51,13 +50,11 @@ class RLEnemy(NPC):
 
     def decide_action(self) -> int:
         """
-        Determines the enemy's next action, factoring in reaction cooldowns.
+        Determines the enemy's next action.
 
         Returns:
             int: The action code the enemy will execute.
         """
-        if self.cooldowns["reaction"] > 0:
-            return self.current_action
 
         self.current_action = self.forced_action
 

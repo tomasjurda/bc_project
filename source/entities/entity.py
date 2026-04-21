@@ -27,7 +27,7 @@ class Entity(pygame.sprite.Sprite):
         hitpoints (float): Current health pool.
         stamina (float): Current stamina pool.
         damage (int): Base attack damage.
-        fsm (Any): The finite state machine instance controlling behavior.
+        state_machine (StateMachine): The state machine instance placeholder.
         direction (pygame.Vector2): Normalized movement vector.
         cooldowns (dict[str, float]): Timers for stun, immunity, etc.
     """
@@ -65,7 +65,7 @@ class Entity(pygame.sprite.Sprite):
         self.damage = 5
 
         self.hit_entities = []
-        self.fsm = None
+        self.state_machine = None
 
         # Basic frame setup and animation
         self.current_state_name = "IDLE"
@@ -107,7 +107,7 @@ class Entity(pygame.sprite.Sprite):
                 .upper()
             )
             self.current_state_name = clean_state_name
-            self.fsm.change_state(new_state)
+            self.state_machine.change_state(new_state)
 
     def load_frames(self, row: int, cols: int, rotate: bool) -> list[pygame.Surface]:
         """

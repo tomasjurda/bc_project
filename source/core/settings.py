@@ -9,6 +9,8 @@ used by Machine Learning and Reinforcement Learning models.
 WINDOW_WIDTH, WINDOW_HEIGHT = 800, 600
 TILE_SIZE = 64
 
+MELEE_RANGE = 60
+
 # Maps string state names to unique integers. Used for compiling the
 # observation context array for the RL environment and Decision Tree.
 SHARED_STATE_MAP = {
@@ -23,8 +25,20 @@ SHARED_STATE_MAP = {
     "DIALOG": 8,
 }
 
+SHARED_STATE_MAP_REVERSED = {
+    0: "IDLE",
+    1: "RUN",
+    2: "DODGE",
+    3: "BLOCK",
+    4: "LIGHT_ATTACK",
+    5: "HEAVY_ATTACK",
+    6: "STUN",
+    7: "DEATH",
+    8: "DIALOG",
+}
+
 # Maps integer outputs from the RL agent/Decision Tree back to readable
-# string action commands for the FSM to execute.
+# string action commands for the NPC to execute.
 SHARED_ACTION_MAP = {
     0: "IDLE",
     1: "RUN",

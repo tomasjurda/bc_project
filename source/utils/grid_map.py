@@ -107,16 +107,16 @@ class GridMap:
         def get_neighboars(point: tuple[int, int]):
             """Helper function to find valid adjacent cells."""
             x, y = point
-            valid_neigh = []
+            valid_neighbors = []
+            rows, cols = len(self.grid), len(self.grid[0])
 
-            # Orthogonal directions (Up, Down, Left, Right)
+            # Orthogonal directions (Up, Down, Left, Right) -> Cost is 1
             ortho = [(x + 1, y), (x - 1, y), (x, y + 1), (x, y - 1)]
             for nx, ny in ortho:
-                if 0 <= ny < len(self.grid) and 0 <= nx < len(self.grid[0]):
-                    if self.grid[ny][nx] == 0:
-                        valid_neigh.append((nx, ny))
+                if 0 <= ny < rows and 0 <= nx < cols and self.grid[ny][nx] == 0:
+                    valid_neighbors.append(((nx, ny), 1))
 
-            # Diagonal directions with corner-cutting prevention
+            # Diagonal directions with corner-cutting prevention -> Cost is 1.414
             # Format: ((target_x, target_y), (adjacent1_x, adjacent1_y), (adjacent2_x, adjacent2_y))
             diagonals = [
                 ((x + 1, y + 1), (x + 1, y), (x, y + 1)),  # Bottom-Right
@@ -126,20 +126,21 @@ class GridMap:
             ]
 
             for (nx, ny), (adj1_x, adj1_y), (adj2_x, adj2_y) in diagonals:
-                if 0 <= ny < len(self.grid) and 0 <= nx < len(self.grid[0]):
-                    if self.grid[ny][nx] == 0:
-                        # Prevent clipping: Both adjacent orthogonal tiles must be walkable (0)
-                        if (
-                            self.grid[adj1_y][adj1_x] == 0
-                            and self.grid[adj2_y][adj2_x] == 0
-                        ):
-                            valid_neigh.append((nx, ny))
+                if 0 <= ny < rows and 0 <= nx < cols and self.grid[ny][nx] == 0:
+                    if (
+                        self.grid[adj1_y][adj1_x] == 0
+                        and self.grid[adj2_y][adj2_x] == 0
+                    ):
+                        valid_neighbors.append(((nx, ny), 1.414))
 
-            return valid_neigh
+            return valid_neighbors
 
-        def heuristic(a, b):
-            """Calculates the Euclidean distance heuristic between two grid nodes."""
-            return math.hypot(a[0] - b[0], a[1] - b[1])
+        def heuristic(a, b) -> float:
+            """Calculates the Octile distance for strict 8-way grid movement."""
+            dx = abs(a[0] - b[0])
+            dy = abs(a[1] - b[1])
+
+            return max(dx, dy) + 0.414 * min(dx, dy)
 
         # Convert pixel coordinates to grid coordinates (col, row)
         grid_start_x = int(start_cords[0] / self.scaled_tile_size)
@@ -162,24 +163,16 @@ class GridMap:
             current = p_queue.get()[1]
             if current == goal:
                 break
-            for next_neightboar in get_neighboars(current):
-                if (
-                    current[0] != next_neightboar[0]
-                    and current[1] != next_neightboar[1]
-                ):
-                    step_cost = 1.414
-                else:
-                    step_cost = 1
-
+            for next_neightbor, step_cost in get_neighboars(current):
                 new_cost = cost_so_far[current] + step_cost
                 if (
-                    next_neightboar not in cost_so_far
-                    or new_cost < cost_so_far[next_neightboar]
+                    next_neightbor not in cost_so_far
+                    or new_cost < cost_so_far[next_neightbor]
                 ):
-                    cost_so_far[next_neightboar] = new_cost
-                    priority = new_cost + heuristic(next_neightboar, goal)
-                    p_queue.put((priority, next_neightboar))
-                    came_from[next_neightboar] = current
+                    cost_so_far[next_neightbor] = new_cost
+                    priority = new_cost + heuristic(next_neightbor, goal)
+                    p_queue.put((priority, next_neightbor))
+                    came_from[next_neightbor] = current
 
         # Reconstruct path
         current = goal
@@ -194,6 +187,7 @@ class GridMap:
             )
             path.append((tile_center_x, tile_center_y))
             current = came_from[current]
+        path.append(start_cords)
         path.reverse()
 
         # Optimize the path to remove unnecessary zig-zags
@@ -201,19 +195,12 @@ class GridMap:
 
         return smoothed_path
 
-    def has_line_of_sight(
+    def _has_line_of_sight(
         self, p1: tuple[float, float], p2: tuple[float, float]
     ) -> bool:
         """
-        Determines if there is a clear, unblocked path between two pixel points
-        using Bresenham's Line Algorithm.
-
-        Args:
-            p1 (tuple): Starting pixel (x, y).
-            p2 (tuple): Target pixel (x, y).
-
-        Returns:
-            bool: True if there is an unblocked line of sight, False if blocked by collision.
+        Determines if there is a clear, unblocked path between two pixel points.
+        Includes corner-clipping prevention for entities with physical width.
         """
         # Convert pixel coordinates back to grid coordinates (col, row)
         x1 = int(p1[0] / self.scaled_tile_size)
@@ -237,6 +224,9 @@ class GridMap:
             else:
                 return False  # Treat out-of-bounds as blocked
 
+            # Store the current position before stepping
+            prev_x, prev_y = x1, y1
+
             e2 = 2 * error
             if e2 > -dy:
                 error -= dy
@@ -244,6 +234,25 @@ class GridMap:
             if e2 < dx:
                 error += dx
                 y1 += y_sign
+
+            # CORNER CLIPPING CHECK
+            # If both x and y changed, we made a diagonal step.
+            if x1 != prev_x and y1 != prev_y:
+                # We must check the two adjacent orthogonal tiles we just passed between.
+                # If either is a wall, an entity with width would get stuck.
+
+                # Check bounds for safety before checking grid
+                if (
+                    0 <= y1 < len(self.grid)
+                    and 0 <= prev_x < len(self.grid[0])
+                    and 0 <= prev_y < len(self.grid)
+                    and 0 <= x1 < len(self.grid[0])
+                ):
+
+                    if self.grid[y1][prev_x] == 1 or self.grid[prev_y][x1] == 1:
+                        return False
+                else:
+                    return False  # Out of bounds corner
 
         return True
 
@@ -271,7 +280,7 @@ class GridMap:
 
             # Checking furthest path node in line of sight
             for i in range(len(path) - 1, current_index, -1):
-                if self.has_line_of_sight(path[current_index], path[i]):
+                if self._has_line_of_sight(path[current_index], path[i]):
                     furthest_visible_index = i
                     break
 

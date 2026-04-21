@@ -7,9 +7,14 @@ import gymnasium as gym
 import numpy as np
 import pygame
 
-from source.core.settings import WINDOW_WIDTH, WINDOW_HEIGHT, SHARED_ACTION_MAP
+from source.core.settings import (
+    WINDOW_WIDTH,
+    WINDOW_HEIGHT,
+    SHARED_ACTION_MAP,
+    MELEE_RANGE,
+)
 
-from source.fsm.enemy_states import Basic_Enemy_Run
+from source.states.enemy_states import Basic_Enemy_Run
 
 from source.entities.hostile_npc import HostileNPC
 
@@ -44,16 +49,23 @@ class CustomEnv(gym.Env):
         last_opp_hp (int | float | None): The opponent's HP from the previous step (for reward calculation).
     """
 
-    def __init__(self, render_mode: str | None = None) -> None:
+    def __init__(
+        self, render_mode: str | None = None, brain_type: str = "tree"
+    ) -> None:
         """
         Initializes the RPG environment, defining observation and action spaces.
 
         Args:
             render_mode (str | None): "human" to display the Pygame window, or None for headless training.
+            brain_type (str): The logic/brain type for the opponent NPC.
         """
         super().__init__()
         self.render_mode = render_mode
         self.debug_mode = False
+        self.brain_type = brain_type
+
+        self.max_steps = 1800  # 30 seconds at 60 FPS
+        self.current_step = 0
 
         # ACTIONS: 0:Idle, 1:Run, 2:Dodge, 3:Block, 4:L_Atk, 5:H_Atk, 6:Feint, 7:Break
         self.action_space = gym.spaces.Discrete(8)
@@ -107,6 +119,8 @@ class CustomEnv(gym.Env):
         """
         super().reset(seed=seed)
 
+        self.current_step = 0
+
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
 
@@ -126,10 +140,10 @@ class CustomEnv(gym.Env):
         self.opponent = HostileNPC(
             (600, 400),
             [self.all_sprites],
-            SpriteManager.get_spritesheet("tree"),
+            SpriteManager.get_spritesheet(self.brain_type),
             self.collision_sprites,
             player=self.agent,
-            brain_type="tree",
+            brain_type=self.brain_type,
         )
 
         self.opponent.states["RUN"]["state"] = Basic_Enemy_Run()
@@ -148,7 +162,7 @@ class CustomEnv(gym.Env):
 
     def step(self, action: int) -> tuple[np.ndarray, float, bool, bool, dict]:
         """
-        Advances the environment by one logical RL step (which comprises 4 rendered frames).
+        Advances the environment by one logical RL step (which comprises 15 rendered frames).
 
         Args:
             action (int): The integer code of the action chosen by the RL agent.
@@ -162,18 +176,40 @@ class CustomEnv(gym.Env):
         terminated = False
         truncated = False
 
-        # Run 4 game frames per 1 RL step to allow animations and physics to unfold
-        for _ in range(4):
+        FRAME_SKIP = 15
+
+        # Run 15 game frames per 1 RL step to allow animations and physics to unfold
+        for _ in range(FRAME_SKIP):
             dt = 1 / 60.0
 
             self.agent.update(dt)
             self.opponent.update(dt)
-
             self.combat_manager.check_hits(self.agent, [self.opponent])
+
+            self.current_step += 1
 
             # Reward calculation
             step_reward = self._calculate_reward()
             total_reward += step_reward
+
+            # Render the environment (only if being watched by a human)
+            if self.render_mode == "human":
+                self.display_surface.fill("gray")
+                self.all_sprites.draw(
+                    self.display_surface,
+                    (0, 0),
+                    WINDOW_WIDTH,
+                    WINDOW_HEIGHT,
+                    self.debug_mode,
+                )
+
+                pygame.event.pump()
+                pygame.display.update()
+                self.clock.tick(60)
+
+            if not terminated and self.current_step >= self.max_steps:
+                truncated = True
+                total_reward += (self.agent.hitpoints - self.opponent.hitpoints) * 50
 
             # Check for episode termination (death of either entity)
             if self.agent.hitpoints <= 0 or self.opponent.hitpoints <= 0:
@@ -185,21 +221,6 @@ class CustomEnv(gym.Env):
                     total_reward -= 50  # Loss
                 break
 
-        # Render the environment (only if being watched by a human)
-        if self.render_mode == "human":
-            self.display_surface.fill("gray")
-            self.all_sprites.draw(
-                self.display_surface,
-                (0, 0),
-                WINDOW_WIDTH,
-                WINDOW_HEIGHT,
-                self.debug_mode,
-            )
-
-            pygame.event.pump()
-            pygame.display.update()
-            self.clock.tick(20)
-
         # Generate Output
         obs = np.array(self.agent.get_context_rl(), dtype=np.float32)
         info = {}
@@ -210,8 +231,8 @@ class CustomEnv(gym.Env):
         """
         Calculates the reward for the agent based on spacing, combat events, and resource management.
         """
-        # Small penalty every frame to encourage ending the fight quickly (-0.1 per step)
-        reward = -0.025
+        # Small penalty every frame to encourage ending the fight quickly
+        reward = -0.1
 
         dist = pygame.Vector2(self.agent.hitbox_rect.center).distance_to(
             pygame.Vector2(self.opponent.hitbox_rect.center)
@@ -221,8 +242,6 @@ class CustomEnv(gym.Env):
         opp_state_name = self.opponent.current_state_name
 
         action_str = SHARED_ACTION_MAP.get(int(self.agent.current_action), "IDLE")
-
-        MELEE_RANGE = 70
 
         # Spacing and aggresion
         if dist > MELEE_RANGE:
@@ -239,16 +258,18 @@ class CustomEnv(gym.Env):
             self.out_of_combat_punishment = 0
             reward += 0.25
 
-            if agent_state_name == "IDLE" and self.agent.stamina >= 0.7:
+            if agent_state_name in ["IDLE", "RUN"] and self.agent.stamina >= 0.7:
                 self.pasive_punishment += 0.25
-            elif agent_state_name in ["BLOCK", "DODGE", "LIGHT_ATTACK", "HEAVY_ATTACK"]:
+            elif agent_state_name in ["LIGHT_ATTACK", "HEAVY_ATTACK"]:
                 self.pasive_punishment = 0
-
-            if (
-                agent_state_name in ["BLOCK", "DODGE"]
-                and opp_state_name not in ["LIGHT_ATTACK", "HEAVY_ATTACK"]
-            ) or agent_state_name == "RUN":
-                reward -= 0.25
+            elif agent_state_name in ["BLOCK", "DODGE"]:
+                if (
+                    opp_state_name not in ["LIGHT_ATTACK", "HEAVY_ATTACK"]
+                    and self.agent.stamina >= 0.7
+                ):
+                    self.pasive_punishment += 0.1
+                else:
+                    self.pasive_punishment = 0
 
         reward -= self.out_of_combat_punishment + self.pasive_punishment
 
@@ -257,8 +278,13 @@ class CustomEnv(gym.Env):
             reward -= 2.5
 
         # Punish trying to FEINT when not winding up a heavy attack
-        if agent_state_name != "HEAVY_ATTACK" and action_str == "FEINT":
-            reward -= 2.5
+        if action_str == "FEINT":
+            if agent_state_name == "HEAVY_ATTACK" and (
+                opp_state_name == "DODGE" or dist > MELEE_RANGE
+            ):
+                reward += 5.0
+            else:
+                reward -= 1.0
 
         # HP deltas
         dmg_dealt = self.last_opp_hp - self.opponent.hitpoints
@@ -276,13 +302,18 @@ class CustomEnv(gym.Env):
                 if self.agent.is_parying:
                     reward += 1.0
 
+        if (
+            action_str == "HEAVY_ATTACK" or agent_state_name == "HEAVY_ATTACK"
+        ) and opp_state_name == "BLOCK":
+            reward += 10.0
+
         if "STUN" in agent_state_name:
             reward -= 1.0
         if "STUN" in opp_state_name:
             reward += 2.5
 
         if (self.agent.stamina / self.agent.max_stamina) < 0.2:
-            reward -= 0.25
+            reward -= 0.5
 
         # Update cached HP for the next step
         self.last_opp_hp = self.opponent.hitpoints

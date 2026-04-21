@@ -189,7 +189,7 @@ class Level:
                     HostileNPC(
                         (spawn_pos[0], spawn_pos[1]),
                         (self.all_sprites, self.enemy_sprites),
-                        SpriteManager.get_spritesheet("basic_npc"),
+                        SpriteManager.get_spritesheet(npc_data["mode"]),
                         self.collision_sprites,
                         self.player,
                         brain_type=npc_data["mode"],
@@ -248,7 +248,7 @@ class Level:
 
         # Handle specific combat scenarios based on the map type
         if self.map_name == "arena_spectate":
-            # Let NPCs fight each other
+            # NPCs fight each other
             self.combat_manager.check_hits(self.npc_1, [self.npc_2])
         else:
             # Player vs. Enemies

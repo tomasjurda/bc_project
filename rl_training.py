@@ -18,7 +18,8 @@ from source.core.settings import SHARED_ACTION_MAP
 # Directory paths for saving models and tensorboard logs
 models_dir = "data/rl_models"
 log_dir = "data/logs"
-model_name = "ppo_agent"
+check_dir = "data/rl_models/checkpoints"
+model_name = "ppo_agent_new"
 model_path = f"{models_dir}/{model_name}.zip"
 
 
@@ -27,24 +28,26 @@ if not os.path.exists(models_dir):
     os.makedirs(models_dir)
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
+if not os.path.exists(check_dir):
+    os.makedirs(check_dir)
 
 
-def train() -> None:
+def train(brain_type: str = "tree", timesteps: int = 100_000) -> None:
     """
     Initializes a headless training environment and trains a PPO model.
     Loads an existing model if one is found, otherwise creates a new one.
     """
-    print("RL model training")
+    print(f"RL model training (Opponent: {brain_type}, Timesteps: {timesteps})")
 
     # 1. Environment Setup (Headless)
     SoundManager.init(enable_audio=False)
     SoundManager.load_all_sounds()
 
-    env = CustomEnv(render_mode=None)
+    env = CustomEnv(render_mode=None, brain_type=brain_type)
 
     # Callback to periodically save the model during long training sessions
     checkpoint_callback = CheckpointCallback(
-        save_freq=100000, save_path=models_dir, name_prefix="ppo_agent_checkpoint"
+        save_freq=100000, save_path=check_dir, name_prefix=f"{model_name}_checkpoint"
     )
 
     # 2. Load or Create Model
@@ -72,10 +75,10 @@ def train() -> None:
         reset_timesteps = True
 
     # 3. Execution
-    print("Starting training. This may take a few hours. Press CTRL+C to stop safely.")
+    print("Starting training. This may take a while. Press CTRL+C to stop safely.")
     try:
         model.learn(
-            total_timesteps=100_000,
+            total_timesteps=timesteps,
             reset_num_timesteps=reset_timesteps,
             callback=checkpoint_callback,
         )
@@ -87,7 +90,7 @@ def train() -> None:
     print("Model saved.")
 
 
-def watch():
+def watch(brain_type: str = "tree"):
     """
     Initializes a human-rendered environment and watches a trained PPO model play.
     Allows the user to exit safely by pressing the ESC key.
@@ -104,12 +107,8 @@ def watch():
     SoundManager.set_master_volume(0.4)
 
     # Render mode is set to human to display the Pygame window
-    env = CustomEnv(render_mode="human")
+    env = CustomEnv(render_mode="human", brain_type=brain_type)
     model = PPO.load(model_path, device="cpu")
-
-    last_action = None
-    last_state = None
-    last_reward = 0
 
     obs, _ = env.reset()
     running = True
@@ -137,17 +136,9 @@ def watch():
         current_state = env.agent.current_state_name
         current_reward = reward
 
-        if (
-            current_action != last_action
-            or current_state != last_state
-            or current_reward != last_reward
-        ):
-            print(
-                f"action: {current_action:>12},\t state: {current_state:>12},\t reward: {current_reward:.2f}"
-            )
-            last_action = current_action
-            last_state = current_state
-            last_reward = current_reward
+        print(
+            f"action: {current_action:>12},\t state: {current_state:>12},\t reward: {current_reward:.2f}"
+        )
 
         # Reset the environment if the episode finishes# Reset the environment if the episode finishes
         if terminated or truncated:
@@ -159,11 +150,39 @@ def watch():
 
 
 if __name__ == "__main__":
-    mode = input("Choose mode (train/watch): ").strip().lower()
+    while True:
+        mode = input("Choose mode (train/watch/quit): ").strip().lower()
 
-    if mode == "train":
-        train()
-    elif mode == "watch":
-        watch()
-    else:
-        print("Unknown mode.")
+        if mode == "quit":
+            print("Exiting program")
+            break
+
+        elif mode == "train":
+            # Prompt for brain type
+            brain_input = (
+                input("Enter opponent brain type (default 'tree'): ").strip().lower()
+            )
+            brain = brain_input if brain_input else "tree"
+
+            # Prompt for timesteps
+            timesteps_input = input(
+                "Enter training timesteps (default 100000): "
+            ).strip()
+            try:
+                timesteps_value = int(timesteps_input) if timesteps_input else 100_000
+            except ValueError:
+                print("Invalid input. Defaulting to 100,000 timesteps.")
+                timesteps_value = 100_000
+
+            train(brain_type=brain, timesteps=timesteps_value)
+
+        elif mode == "watch":
+            brain_input = (
+                input("Enter opponent brain type (default 'tree'): ").strip().lower()
+            )
+            brain = brain_input if brain_input else "tree"
+
+            watch(brain_type=brain)
+
+        else:
+            print("Unknown mode. Please choose train, watch, or quit.")

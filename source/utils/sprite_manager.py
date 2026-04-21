@@ -54,7 +54,10 @@ class SpriteManager:
             "player", join("graphics", "models", "player_model.png")
         )
         SpriteManager.add_spritesheet(
-            "basic_npc", join("graphics", "models", "basic_npc.png")
+            "basic_offensive", join("graphics", "models", "basic_npc.png")
+        )
+        SpriteManager.add_spritesheet(
+            "basic_defensive", join("graphics", "models", "basic_npc.png")
         )
         SpriteManager.add_spritesheet(
             "tree", join("graphics", "models", "tree_model_npc.png")

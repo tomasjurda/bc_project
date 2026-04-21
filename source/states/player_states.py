@@ -5,8 +5,8 @@ Handles keyboard/mouse inputs and transitions between combat/movement states.
 
 import pygame
 
-from source.fsm.state import State
-from source.fsm.general_states import Idle, Run, Block, Stun, Heavy_Attack
+from source.states.state import State
+from source.states.general_states import Idle, Run, Block, Stun, Heavy_Attack
 
 
 class Player_Idle(Idle):

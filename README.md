@@ -5,12 +5,14 @@ An Top-Down Souls-like developed in Python using Pygame. This project was create
 The game features several interconnected maps (Tutorial, Crossroads, City, Arena) where the player can explore, fight, and interact with the world.
 Instead of a single AI approach, this game utilizes multiple distinct systems:
 
-Combat AI: Enemies are driven by a Finite State Machine (FSM), but their decision-making is handled by different "Brains":
+Combat AI: Enemies are driven by a state machine (StateMachine), but their decision-making is handled by different "Brains":
 - Simple Brain: A baseline, rule-based if/else system.
-- Decision Tree: A machine learning model (scikit-learn) trained on pre-recorded combat datasets.
+- Decision Tree: A machine learning model (scikit-learn) trained on combat datasets.
 - Reinforcement Learning (PPO): A neural network trained via Proximal Policy Optimization (stable-baselines3 / gymnasium) in a custom simulated combat environment.
 
 Narrative AI: Non-Hostile NPCs do not use traditional dialogue trees. Instead, they interface with a local LLM via Ollama. NPCs process player text dynamically, evaluate politeness, manage internal affinity scores, and update game quests in real-time.
+
+Models used in this project are from https://cainos.itch.io/pixel-art-top-down-basic and https://kenmi-art.itch.io/cute-fantasy-rpg.
 
 ## 2. How to Run the Project
 
@@ -82,7 +84,7 @@ Hitboxes: Renders physics collision boxes. The player's color changes based on t
 - Blue: Parrying (tight defensive window)
 - Black: Dodging (Invincibility frames active)
 Attack Hitboxes: Temporary red rectangles that spawn strictly during the lethal frames of weapon swings.
-FSM States: Displays the current active state (e.g., RUN, IDLE, STUN) above entities' heads
+States: Displays the current active state (e.g., RUN, IDLE, STUN) above entities' heads
 Pathfinding: Displays the A* algorithm's pathfinding nodes (black squares) that smart enemies use to navigate around obstacles towards the player.
 AI Data: Displays what "Brain" is currently piloting an enemy (tree, rl_mlp, basic) and shows the active numeric Affinity score for peaceful NPCs.
 

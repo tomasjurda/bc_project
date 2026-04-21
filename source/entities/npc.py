@@ -8,8 +8,8 @@ import random
 import numpy as np
 import pygame
 
-from source.fsm.fsm import FSM
-from source.fsm.enemy_states import (
+from source.states.state_machine import StateMachine
+from source.states.enemy_states import (
     Enemy_Idle,
     Enemy_Run,
     Enemy_Block,
@@ -25,6 +25,7 @@ from source.utils.data_manager import DataManager
 from source.core.settings import (
     SHARED_STATE_MAP,
     SHARED_ACTION_MAP_REVERSED,
+    SHARED_ACTION_MAP,
 )
 
 
@@ -78,9 +79,10 @@ class NPC(Entity):
         self.path_to_player = []
         self.brain_type = brain_type
 
-        self.brain = DataManager.get_brain(brain_type)
+        if brain_type != "rl_training":
+            self.brain = DataManager.get_brain(brain_type)
 
-        self.fsm = FSM(self)
+        self.state_machine = StateMachine(self)
         # States and animations
         self.states = {
             "IDLE": {
@@ -235,7 +237,7 @@ class NPC(Entity):
         dist = pygame.Vector2(self.rect.center).distance_to(
             pygame.Vector2(self.player.rect.center)
         )
-        normalized_dist = (dist + random.randint(-10, 10)) / 400.0
+        normalized_dist = min((dist + random.randint(-10, 10)) / 400.0, 1.0)
         data = [min(max(normalized_dist, 0.0), 1.0)]
 
         # 2. HP & Stamina
@@ -305,7 +307,7 @@ class NPC(Entity):
         """
         self.dt = dt
         self.update_cooldowns(dt)
-        self.fsm.update()
+        self.state_machine.update()
         self.animate()
 
     def decide_action(self) -> int:
@@ -319,7 +321,7 @@ class NPC(Entity):
         if not self.hostile:
             return SHARED_ACTION_MAP_REVERSED.get("IDLE")
 
-        self.cooldowns["reaction"] = random.triangular(0.3, 0.45, 0.35)
+        self.cooldowns["reaction"] = random.triangular(0.2, 0.3, 0.25)
         distance_to_player = pygame.Vector2(self.hitbox_rect.center).distance_to(
             pygame.Vector2(self.player.hitbox_rect.center)
         )

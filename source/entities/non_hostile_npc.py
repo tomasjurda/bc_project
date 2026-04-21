@@ -64,9 +64,7 @@ class NonHostileNPC(NPC):
         self.name = npc_data.get("name", "Unknown NPC")
         self.role_description = npc_data.get("role_description", "a generic person.")
         self.greeting_text = npc_data.get("greeting", "Hello.")
-        self.personal_knowledge = npc_data.get(
-            "personal_knowledge", "You only know about your immediate surroundings."
-        )
+        self.personal_knowledge = npc_data.get("personal_knowledge", "Nothing.")
         self.quests_data = npc_data.get("quests", {})
 
         self.prompt_context = "default"

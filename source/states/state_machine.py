@@ -1,27 +1,27 @@
 """
-Module containing the Finite State Machine (FSM) class,
+Module containing the State Machine class,
 responsible for managing and updating an entity's current behavior state.
 """
 
-from source.fsm.state import State
+from source.states.state import State
 from source.entities.entity import Entity
 
 
-class FSM:
+class StateMachine:
     """
-    A Finite State Machine that controls the active state of a game entity.
+    A state machine that controls the active state of a game entity.
 
     Attributes:
-        entity (Any): The game entity (Player or NPC) this FSM belongs to.
+        entity (Any): The game entity (Player or NPC) this state machine belongs to.
         current_state (State | None): The currently active behavior state object.
     """
 
     def __init__(self, entity: Entity) -> None:
         """
-        Initializes the FSM for a specific entity.
+        Initializes the StateMachine for a specific entity.
 
         Args:
-            entity (Any): The entity this FSM will manage and pass context to.
+            entity (Any): The entity this StateMachine will manage and pass context to.
         """
         self.entity = entity
         self.current_state = None

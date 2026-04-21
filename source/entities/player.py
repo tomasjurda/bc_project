@@ -2,8 +2,8 @@
 Module defining the Player entity, containing stats, states, and sound effects.
 """
 
-from source.fsm.general_states import Dodge, Light_Attack
-from source.fsm.player_states import (
+from source.states.general_states import Dodge, Light_Attack
+from source.states.player_states import (
     Player_Idle,
     Player_Run,
     Player_Block,
@@ -12,7 +12,7 @@ from source.fsm.player_states import (
     Player_Heavy_Attack,
     Player_Stun,
 )
-from source.fsm.fsm import FSM
+from source.states.state_machine import StateMachine
 
 from source.entities.entity import Entity
 from source.utils.sound_manager import SoundManager
@@ -20,17 +20,14 @@ from source.utils.sound_manager import SoundManager
 
 class Player(Entity):
     """
-    The main character controlled by the user.
-
-    Inherits from the base Entity class and manages finite state machines,
-    combat statistics, animations, and audio effects.
+    The main character controlled by the user. Inherits from the base Entity class.
 
     Attributes:
         current_collisions (pygame.sprite.Group): Group of collidable sprites in the current level.
         respawn_point (dict): Stores the level name and (x, y) position to respawn upon death.
         is_alive (bool): Flag indicating if the player is currently alive.
         interacting (bool): Flag indicating if the player is trying to interact with an object/NPC.
-        fsm (FSM): The Finite State Machine controlling player behaviors.
+        state_machine (StateMachine): The state machine controlling player behaviors.
         states (dict): Configuration mapping state names to state objects and animation frames.
         cooldowns (dict): Trackers for time-based cooldowns (e.g., stun, immunity).
         sound_effects (dict): Pre-loaded sound effects mapped to actions.
@@ -61,7 +58,7 @@ class Player(Entity):
         self.speed = 150
 
         # Initialize the state machine
-        self.fsm = FSM(self)
+        self.state_machine = StateMachine(self)
 
         # States and animations
         # Load_frames parameters are generally: (row_index, frame_count, flip_horizontal)
@@ -212,5 +209,5 @@ class Player(Entity):
         """
         self.dt = dt
         self.update_cooldowns(dt)
-        self.fsm.update()
+        self.state_machine.update()
         self.animate()

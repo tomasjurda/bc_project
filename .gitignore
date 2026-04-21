@@ -17,5 +17,6 @@ __pycache__/
 # C extensions
 *.so
 
-source/tmp/
+
+# Other
 data/logs/

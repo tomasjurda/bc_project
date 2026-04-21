@@ -6,7 +6,11 @@ Decision Trees and Reinforcement Learning models.
 """
 
 import random
-from source.core.settings import SHARED_ACTION_MAP_REVERSED
+from source.core.settings import (
+    SHARED_ACTION_MAP_REVERSED,
+    SHARED_STATE_MAP_REVERSED,
+    MELEE_RANGE,
+)
 
 
 class SimpleBrain:
@@ -14,36 +18,51 @@ class SimpleBrain:
 
     def __init__(self, strategy: str) -> None:
         self.strategy = strategy
+        self.npc_passive_counter = 0
 
     def predict(self, context_data: list) -> int:
         """
         Predicts the next action based on the provided context data.
-
-        Args:
-            context_data (list): A list containing game state data.
-                Index 0 is expected to be the distance to the player.
-                Index 2 is expected to be the NPC's stamina.
-
-        Returns:
-            int: The action ID representing the chosen behavior.
         """
-
-        # Extract distance and stamina from the specific list indices
         dist = context_data[0]
         npc_stamina = context_data[2]
+        player_action = SHARED_STATE_MAP_REVERSED.get(context_data[6], "IDLE")
+        npc_action = SHARED_STATE_MAP_REVERSED.get(context_data[3], "IDLE")
 
-        if dist > 60:
-            if self.strategy == "offensive":
+        # 1. ACTION COMMITMENT
+        if npc_action in ["LIGHT_ATTACK", "HEAVY_ATTACK"]:
+            return SHARED_ACTION_MAP_REVERSED.get(npc_action)
+
+        # 2. DISTANCE MANAGEMENT
+        if dist > MELEE_RANGE:
+            if self.strategy == "offensive" and npc_stamina > 0.3:
                 return SHARED_ACTION_MAP_REVERSED.get("RUN")
             return SHARED_ACTION_MAP_REVERSED.get("IDLE")
 
-        # Attack if the NPC has sufficient stamina and is close enough
-        roll = random.random()
+        # 3. REACT TO PLAYER ACTIONS
+        if player_action in ["LIGHT_ATTACK", "HEAVY_ATTACK"]:
+            return SHARED_ACTION_MAP_REVERSED.get("BLOCK")
+
+        if player_action == "BLOCK":
+            if self.strategy == "offensive" and npc_stamina >= 0.5:
+                # Offensive enemies try to break the guard
+                return SHARED_ACTION_MAP_REVERSED.get("HEAVY_ATTACK")
+
+        # 4. INITIATE ACTIONS (Player is IDLE, RUNNING, or STUNNED)
         if self.strategy == "offensive":
-            if npc_stamina >= 0.3 and roll >= 0.2:
+            if npc_stamina >= 0.3:
                 return SHARED_ACTION_MAP_REVERSED.get("LIGHT_ATTACK")
             return SHARED_ACTION_MAP_REVERSED.get("BLOCK")
-        else:
-            if npc_stamina >= 0.3 and roll >= 0.6:
+
+        elif self.strategy == "defensive":
+            if player_action == "STUN" or self.npc_passive_counter > 10:
+                self.npc_passive_counter = 0
+                if npc_stamina >= 0.5:
+                    return SHARED_ACTION_MAP_REVERSED.get("HEAVY_ATTACK")
                 return SHARED_ACTION_MAP_REVERSED.get("LIGHT_ATTACK")
+
+            self.npc_passive_counter += 1
             return SHARED_ACTION_MAP_REVERSED.get("BLOCK")
+
+        # Fallback
+        return SHARED_ACTION_MAP_REVERSED.get("IDLE")

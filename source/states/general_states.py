@@ -7,7 +7,7 @@ import random
 import pygame
 
 from source.entities.entity import Entity
-from source.fsm.state import State
+from source.states.state import State
 
 
 class Idle(State):

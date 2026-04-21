@@ -7,8 +7,8 @@ instead of listening to keyboard/mouse inputs.
 import pygame
 
 from source.core.settings import SHARED_ACTION_MAP
-from source.fsm.state import State
-from source.fsm.general_states import (
+from source.states.state import State
+from source.states.general_states import (
     Idle,
     Run,
     Block,
