@@ -11,6 +11,7 @@ from source.dialogs.llm_client import LLMClient
 
 from source.entities.player import Player
 from source.entities.non_hostile_npc import NonHostileNPC
+from source.utils.quest_manager import QuestManager
 
 
 class DialogUI:
@@ -163,9 +164,7 @@ class DialogUI:
                 ):
                     q_name, q_state = quest_update.split(":")
                     if q_name != "NONE" and q_state != "NONE":
-                        self.current_npc.quests.update_quest(
-                            q_name.strip(), q_state.strip()
-                        )
+                        QuestManager.update_quest(q_name.strip(), q_state.strip())
 
                 self.current_npc.chat_history.append(
                     {
@@ -354,7 +353,7 @@ class DialogUI:
             has_quests = False
             for q_name in self.current_npc.quests_data.keys():
                 has_quests = True
-                q_state = self.current_npc.quests.get_status(q_name)
+                q_state = QuestManager.get_status(q_name)
 
                 # Format: "hammer_quest: accepted"
                 q_surf = self.small_font.render(f"- {q_name}:", True, (220, 220, 220))

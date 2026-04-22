@@ -7,7 +7,6 @@ import pygame
 from source.utils.sprite_manager import SpriteManager
 from source.utils.data_manager import DataManager
 from source.utils.sound_manager import SoundManager
-from source.utils.quest_manager import QuestManager
 
 from source.core.level import Level
 
@@ -42,7 +41,6 @@ class Game:
         SoundManager.load_all_sounds()
         SoundManager.set_master_volume(0.4)
 
-        self.quest_manager = QuestManager()
         self.player = Player(
             (0, 0),
             (),
@@ -96,7 +94,7 @@ class Game:
         else:
             # New level object needs to be created and added to cache
             tmx_file = self.level_configs[name]
-            new_level = Level(tmx_file, name, self.quest_manager, self.dialog_ui)
+            new_level = Level(tmx_file, name, self.dialog_ui)
 
             if len(self.level_cache) >= self.MAX_CACHE_SIZE:
                 oldest_level_name = next(iter(self.level_cache))

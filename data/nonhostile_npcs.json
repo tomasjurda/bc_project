@@ -10,7 +10,7 @@
     "quests": {
       "hammer_quest": {
         "not_started": "IF the player asks about your problems or offers help: Explain that Silas the merchant took your hammer and ask them to get it back for you. If they agree to help you: set quest_update to \"hammer_quest:accepted\". IF the player talks about anything else: Complain about Silas but set quest_update to \"NONE\".",
-        "accepted": "You are waiting for your hammer. Tell the player to hurry up and get it from Silas. quest_update is \"NONE\".",
+        "accepted": "You are waiting for your hammer. Tell the player to hurry up and get it from Silas. If player tells you he has it, tell him to not lie to your face. quest_update is always \"NONE\".",
         "retrieved": "The player has your hammer. IF the player gives you the hammer: Thank them warmly and set quest_update to \"hammer_quest:completed\". IF they refuse to give it: Demand it back and set quest_update to \"NONE\"."
       }
     }

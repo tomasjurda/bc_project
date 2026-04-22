@@ -27,7 +27,6 @@ class Player(Entity):
         respawn_point (dict): Stores the level name and (x, y) position to respawn upon death.
         is_alive (bool): Flag indicating if the player is currently alive.
         interacting (bool): Flag indicating if the player is trying to interact with an object/NPC.
-        state_machine (StateMachine): The state machine controlling player behaviors.
         states (dict): Configuration mapping state names to state objects and animation frames.
         cooldowns (dict): Trackers for time-based cooldowns (e.g., stun, immunity).
         sound_effects (dict): Pre-loaded sound effects mapped to actions.
@@ -56,9 +55,6 @@ class Player(Entity):
         self.max_hitpoints = 200
         self.damage = 20
         self.speed = 150
-
-        # Initialize the state machine
-        self.state_machine = StateMachine(self)
 
         # States and animations
         # Load_frames parameters are generally: (row_index, frame_count, flip_horizontal)

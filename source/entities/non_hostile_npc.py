@@ -38,7 +38,6 @@ class NonHostileNPC(NPC):
         collisions: pygame.sprite.Group,
         player: Player,
         npc_data: dict,
-        quests: QuestManager,
         brain_type: str = "basic_offensive",
     ) -> None:
         """
@@ -51,12 +50,9 @@ class NonHostileNPC(NPC):
             collisions (pygame.sprite.Group): Environment collision objects.
             player (Player): Reference to the player entity.
             npc_data (dict): Dictionary containing name, lore, and quest rules from JSON.
-            quests (QuestManager): Reference to the global QuestManager.
             brain_type (str): The AI combat model to use if the NPC becomes hostile.
         """
         super().__init__(pos, groups, sprite_sheet, collisions, player, brain_type)
-
-        self.quests = quests
 
         self.hostile = False
         self.affinity = 0
@@ -90,7 +86,7 @@ class NonHostileNPC(NPC):
 
         quest_instructions = ""
         for quest_name, quest_states in self.quests_data.items():
-            current_state = self.quests.get_status(quest_name)
+            current_state = QuestManager.get_status(quest_name)
 
             if current_state in quest_states:
                 quest_instructions += (

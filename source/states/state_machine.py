@@ -4,7 +4,6 @@ responsible for managing and updating an entity's current behavior state.
 """
 
 from source.states.state import State
-from source.entities.entity import Entity
 
 
 class StateMachine:
@@ -12,11 +11,11 @@ class StateMachine:
     A state machine that controls the active state of a game entity.
 
     Attributes:
-        entity (Any): The game entity (Player or NPC) this state machine belongs to.
+        entity (Entity): The game entity (Player or NPC) this state machine belongs to.
         current_state (State | None): The currently active behavior state object.
     """
 
-    def __init__(self, entity: Entity) -> None:
+    def __init__(self, entity) -> None:
         """
         Initializes the StateMachine for a specific entity.
 

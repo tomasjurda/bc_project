@@ -22,7 +22,6 @@ from source.sprites.sprite_group import AllSprites
 from source.utils.sprite_manager import SpriteManager
 from source.utils.combat_manager import CombatManager
 from source.utils.data_manager import DataManager
-from source.utils.quest_manager import QuestManager
 
 from source.dialogs.dialog import DialogUI
 
@@ -44,16 +43,13 @@ class Level:
         all_sprites (AllSprites): Custom sprite group for Y-sorted rendering.
     """
 
-    def __init__(
-        self, tmx_file: str, map_name: str, quests: QuestManager, dialog_ui: DialogUI
-    ) -> None:
+    def __init__(self, tmx_file: str, map_name: str, dialog_ui: DialogUI) -> None:
         """
         Initializes the Level by loading the TMX file and setting up sprite groups.
 
         Args:
             tmx_file (str): Filepath to the TMX map file.
             map_name (str): Identifier name for the level.
-            quests (QuestManager): Reference to the global quest state manager.
             dialog_ui (DialogUI): Reference to the UI responsible for dialog.
         """
         self.map = pytmx.load_pygame(tmx_file)
@@ -63,7 +59,6 @@ class Level:
         self.map_height = self.map.height
 
         self.dialog_ui = dialog_ui
-        self.combat_manager = CombatManager()
 
         self.all_sprites = AllSprites()
         self.interact_sprites = pygame.sprite.Group()
@@ -73,8 +68,6 @@ class Level:
         # Lists to store entity spawn coordinates parsed from the map
         self.npc_spawn_positions = []
         self.player_spawn_positions = []
-
-        self.quests = quests
 
         self.player = None
         self.npc_1 = None
@@ -222,7 +215,6 @@ class Level:
                         self.collision_sprites,
                         self.player,
                         non_hostile_npc_data,
-                        self.quests,
                         brain_type=npc_data["mode"],
                     )
 
@@ -249,10 +241,10 @@ class Level:
         # Handle specific combat scenarios based on the map type
         if self.map_name == "arena_spectate":
             # NPCs fight each other
-            self.combat_manager.check_hits(self.npc_1, [self.npc_2])
+            CombatManager.check_hits(self.npc_1, [self.npc_2])
         else:
             # Player vs. Enemies
-            self.combat_manager.check_hits(self.player, self.enemy_sprites)
+            CombatManager.check_hits(self.player, self.enemy_sprites)
 
     def draw(
         self, surface: pygame.Surface, player_pos: tuple[int, int], debug_mode: bool

@@ -14,8 +14,9 @@ class CombatManager:
     and applying knockback/damage between the player and enemies.
     """
 
+    @classmethod
     def check_hits(
-        self, player: Entity, enemy_sprites: pygame.sprite.Group | list[Entity]
+        cls, player: Entity, enemy_sprites: pygame.sprite.Group | list[Entity]
     ) -> None:
         """
         Checks for active attack hitboxes intersecting with hurtboxes for both
@@ -44,7 +45,7 @@ class CombatManager:
                     and enemy not in player.hit_entities
                 ):
                     player.hit_entities.append(enemy)
-                    self.resolve_hit(player, enemy, attack_type)
+                    cls.resolve_hit(player, enemy, attack_type)
 
         # Enemy attacks
         for enemy in enemy_sprites:
@@ -58,9 +59,10 @@ class CombatManager:
                     and player.cooldowns["imunity"] <= 0
                 ):
                     enemy.hit_entities.append(player)
-                    self.resolve_hit(enemy, player, attack_type)
+                    cls.resolve_hit(enemy, player, attack_type)
 
-    def resolve_hit(self, attacker: Entity, defender: Entity, attack_type: int) -> None:
+    @staticmethod
+    def resolve_hit(attacker: Entity, defender: Entity, attack_type: int) -> None:
         """
         Resolves the outcome of a successful hitbox intersection.
         Handles dodging, blocking angles, parrying, and damage application.

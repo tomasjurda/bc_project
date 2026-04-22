@@ -8,6 +8,7 @@ import pygame
 
 from source.utils.grid_map import GridMap
 from source.utils.animation import Animation
+from source.states.state_machine import StateMachine
 
 
 class Entity(pygame.sprite.Sprite):
@@ -65,7 +66,7 @@ class Entity(pygame.sprite.Sprite):
         self.damage = 5
 
         self.hit_entities = []
-        self.state_machine = None
+        self.state_machine = StateMachine(self)
 
         # Basic frame setup and animation
         self.current_state_name = "IDLE"

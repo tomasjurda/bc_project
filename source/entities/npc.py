@@ -8,7 +8,7 @@ import random
 import numpy as np
 import pygame
 
-from source.states.state_machine import StateMachine
+#from source.states.state_machine import StateMachine
 from source.states.enemy_states import (
     Enemy_Idle,
     Enemy_Run,
@@ -81,7 +81,6 @@ class NPC(Entity):
         if brain_type != "rl_training":
             self.brain = DataManager.get_brain(brain_type)
 
-        self.state_machine = StateMachine(self)
         # States and animations
         self.states = {
             "IDLE": {

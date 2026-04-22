@@ -40,7 +40,6 @@ class CustomEnv(gym.Env):
         observation_space (gym.spaces.Box): The continuous observation space of the agent.
         display_surface (pygame.Surface): The Pygame surface used for rendering.
         clock (pygame.time.Clock): Pygame clock to control frame rate during rendering.
-        combat_handler (CombatManager): Handles hit detection and damage resolution.
         all_sprites (AllSprites): Group containing all rendered entities.
         collision_sprites (pygame.sprite.Group): Group handling environment collisions.
         agent (RLEnemy | None): The Reinforcement Learning agent being trained.
@@ -90,7 +89,6 @@ class CustomEnv(gym.Env):
         DataManager.load_map_and_npc_data()
 
         self.clock = pygame.time.Clock()
-        self.combat_manager = CombatManager()
         self.all_sprites = AllSprites()
         self.collision_sprites = pygame.sprite.Group()
 
@@ -184,7 +182,7 @@ class CustomEnv(gym.Env):
 
             self.agent.update(dt)
             self.opponent.update(dt)
-            self.combat_manager.check_hits(self.agent, [self.opponent])
+            CombatManager.check_hits(self.agent, [self.opponent])
 
             self.current_step += 1
 
