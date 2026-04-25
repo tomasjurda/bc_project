@@ -1,6 +1,8 @@
 # AI-Driven Game (Bachelor's Thesis Project)
 An Top-Down Souls-like developed in Python using Pygame. This project was created for my Bachelor's thesis to explore, implement, and evaluate various Artificial Intelligence techniques within video games. It moves away from hardcoded, traditional game mechanics by utilizing Machine Learning (ML), Reinforcement Learning (RL), and Local Large Language Models (LLMs) to drive both combat behavior and dynamic narrative progression.
 
+Models used in this project are from https://cainos.itch.io/pixel-art-top-down-basic and https://kenmi-art.itch.io/cute-fantasy-rpg. Sound effects are from https://tommusic.itch.io/free-fantasy-200-sfx-pack.
+
 ## 1. Project Overview
 The game features several interconnected maps (Tutorial, Crossroads, City, Arena) where the player can explore, fight, and interact with the world.
 Instead of a single AI approach, this game utilizes multiple distinct systems:
@@ -19,8 +21,6 @@ Combat AI: Enemies are driven by a state machine (StateMachine), but their decis
   ![RL_NPC](/graphics/model_pics/rl_model_npc_pic.png)
 
 Narrative AI: Non-Hostile NPCs do not use traditional dialogue trees. Instead, they interface with a local LLM via Ollama. NPCs process player text dynamically, evaluate politeness, manage internal affinity scores, and update game quests in real-time.
-
-Models used in this project are from https://cainos.itch.io/pixel-art-top-down-basic and https://kenmi-art.itch.io/cute-fantasy-rpg.
 
 ## 2. How to Run the Project
 

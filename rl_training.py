@@ -5,6 +5,7 @@ using Proximal Policy Optimization (PPO) in a custom environment.
 
 import os
 import pygame
+import numpy as np
 from stable_baselines3 import PPO
 from stable_baselines3.common.callbacks import CheckpointCallback
 
@@ -19,7 +20,7 @@ from source.core.settings import SHARED_ACTION_MAP
 models_dir = "data/rl_models"
 log_dir = "data/logs"
 check_dir = "data/rl_models/checkpoints"
-model_name = "ppo_agent_new"
+model_name = "ppo_agent"
 model_path = f"{models_dir}/{model_name}.zip"
 
 
@@ -149,9 +150,53 @@ def watch(brain_type: str = "tree"):
     print("Ending...")
 
 
+def evaluate(brain_type: str = "tree", p_episodes: int = 100):
+    """
+    Initializes a headless environment and evaluates agents performance versus other models.
+    """
+    print("Evaluating RL agent")
+
+    if not os.path.exists(model_path):
+        print("Model doesnt exist, train first.")
+        return
+
+    episodes = p_episodes
+    wins = 0
+    total_rewards = []
+
+    SoundManager.init(enable_audio=False)
+    SoundManager.load_all_sounds()
+
+    env = CustomEnv(render_mode=None, brain_type=brain_type)
+    model = PPO.load(model_path, device="cpu")
+
+    for ep in range(episodes):
+        obs, _ = env.reset()
+        done = False
+        ep_reward = 0
+
+        while not done:
+            action, _ = model.predict(obs, deterministic=True)
+            obs, reward, terminated, truncated, info = env.step(action)
+            ep_reward += reward
+            done = terminated or truncated
+
+        total_rewards.append(ep_reward)
+
+        if env.opponent.hitpoints <= 0:
+            wins += 1
+
+    win_rate = (wins / episodes) * 100
+    mean_reward = np.mean(total_rewards)
+
+    print(f"Evaluation finished ({episodes} episodes):")
+    print(f"Win Rate: {win_rate} %")
+    print(f"Average reward: {mean_reward:.2f}")
+
+
 if __name__ == "__main__":
     while True:
-        mode = input("Choose mode (train/watch/quit): ").strip().lower()
+        mode = input("Choose mode (train/watch/eval/quit): ").strip().lower()
 
         if mode == "quit":
             print("Exiting program")
@@ -183,6 +228,21 @@ if __name__ == "__main__":
             brain = brain_input if brain_input else "tree"
 
             watch(brain_type=brain)
+
+        elif mode == "eval":
+            brain_input = (
+                input("Enter opponent brain type (default 'tree'): ").strip().lower()
+            )
+            brain = brain_input if brain_input else "tree"
+
+            episodes_input = input("Enter episodes (default 100): ").strip()
+            try:
+                episodes_value = int(episodes_input) if episodes_input else 100
+            except ValueError:
+                print("Invalid input. Defaulting to 100 episodes.")
+                episodes_value = 100
+
+            evaluate(brain_type=brain, p_episodes=episodes_value)
 
         else:
             print("Unknown mode. Please choose train, watch, or quit.")
